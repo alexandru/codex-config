@@ -1,0 +1,29 @@
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+
+[sandbox_workspace_write]
+network_access = false
+
+[features]
+multi_agent = true
+network_proxy = true
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 4
+interrupt_message = true
+
+[permissions.librarian.filesystem]
+":root" = "deny"
+":minimal" = "read"
+"/tmp/codex-librarian" = "write"
+
+[permissions.librarian.filesystem.":workspace_roots"]
+"." = "read"
+
+[permissions.librarian.network]
+enabled = true
+
+[permissions.librarian.network.domains]
+"*" = "allow"
