@@ -1,33 +1,83 @@
-# Codex Config
+# My Codex configuration
 
-Codex configuration lives in this repository. Clone it to `~/.codex`, or set `CODEX_HOME` to the clone path:
+## Installation
 
-```bash
-git clone --recurse-submodules git@github.com:alexandru/codex-config.git ~/.codex
-# or: export CODEX_HOME=/path/to/agents-config/codex
+**1)** Clone the repository into Codex's global configuration directory:
+
+```sh
+git clone https://github.com/alexandru/codex-config.git ~/.codex
 ```
 
-`CODEX_HOME` contains authentication, session, history, log, cache, and other runtime state. These files are gitignored. Never force-add or commit them.
+If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
 
-`.agents -> .` is a tracked symlink for `npx skills add`, making the repository `skills/` directory its installation target. `skills/` setup intentionally mirrors other harnesses. Codex CLI 0.148.0 discovers skills directly from `$CODEX_HOME/skills`; `.agents` exists for installer compatibility.
+```sh
+export CODEX_HOME=/absolute/path/to/codex-config
+```
 
-Safety defaults are `workspace-write`, `on-request`, and `auto-review`. Normal workspace commands are not all model-reviewed; sandbox escalations are routed to the automatic reviewer.
+## Defined agents
 
-## Agents
+Main agents:
 
-- **Orchestrator** — default behavior from global `AGENTS.md`; principal engineer and delegation owner.
-- **Junior** — focused executor and shell-assisted explorer.
-- **Explorer** — read-only codebase evidence specialist.
-- **Librarian** — read-only external research specialist.
+- `Orchestrator` (default agent): implements changes; delegates evidence, research, and checks.
 
-Codex custom-agent roles are spawned subagents. Global `AGENTS.md` supplies default Orchestrator behavior.
+Sub-agents:
 
-## Skills
+- `Junior`: bounded execution and shell-assisted exploration.
+- `Explorer`: read-only codebase evidence gathering.
+- `Librarian`: read-only external documentation and dependency-source research.
 
-`caveman`, `cellar`, `codebase-design`, `diagnosing-bugs`, `domain-modeling`, `grilling`, `handoff`, `resolving-merge-conflicts`, `simplify`, `tdd`.
+## Defined skills
 
-Update skills manually, then review every change:
+- [alexandru/skills](https://github.com/alexandru/skills/)
+  - `simplify`: behavior-preserving code cleanup.
+- [mattpocock/skills](https://github.com/mattpocock/skills/tree/v1.2.3)
+  - `codebase-design`: deep-module design vocabulary and principles.
+  - `code-review`: review changes against repository standards and the originating specification.
+  - `diagnosing-bugs`: disciplined diagnosis for hard bugs and regressions.
+  - `domain-modeling`: domain language and architectural decisions.
+  - `grill-with-docs`: sharpen a plan or design while creating domain documentation.
+  - `grilling`: structured decision-tree interviews.
+  - `handoff`: prepare context for another agent or session.
+  - `implement`: implement work from a specification or set of tickets.
+  - `improve-codebase-architecture`: find and work through codebase architecture improvements.
+  - `resolving-merge-conflicts`: merge and rebase conflict resolution.
+  - `setup-matt-pocock-skills`: configure a repository for the engineering skills.
+  - `tdd`: test-first development guidance.
+  - `to-spec`: turn the current conversation into a published specification.
+  - `to-tickets`: break a plan or specification into tracer-bullet tickets.
+- [VirtusLab/cellar](https://github.com/VirtusLab/cellar/)
+  - `cellar`: query the APIs of JVM dependencies (Scala, Java).
+- [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
+  - `caveman`: token-efficient response modes with preserved technical accuracy.
 
-```bash
+### Cellar
+
+Install [Coursier](https://get-coursier.io/docs/cli-installation) first:
+
+```sh
+## MacOS
+brew install coursier/formulas/coursier
+cs setup
+
+## Linux x86-64 (aka AMD64)
+curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+
+## Linux ARM64
+curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+```
+
+Install [Cellar](https://github.com/VirtusLab/cellar) for JVM dependency API lookup:
+
+```sh
+cs install --contrib cellar
+cellar --version
+
+# Disable telemetry
+cellar telemetry disable
+```
+
+## Updating Skills
+
+```sh
 make update-skills
 ```
