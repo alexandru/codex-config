@@ -24,7 +24,7 @@ Use **Junior** for:
 - Fully specified refactors, renames, and repetitive edits
 - Codebase exploration requiring shell tools unavailable to Explorer
 
-Do not execute shell commands directly. Delegate command execution to Junior and external research to Librarian.
+Do not execute shell commands or use MCP, LSP, or codebase search tools directly. Delegate command execution to Junior, codebase searches to Explorer, and external research to Librarian.
 
 ### Planning
 
