@@ -14,6 +14,16 @@ If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/
 export CODEX_HOME=/absolute/path/to/codex-config
 ```
 
+**2)** Install the shared third-party skills globally:
+
+```sh
+cd ~/.codex
+make install-skills
+```
+
+The skills are installed under `~/.agents/skills`, where Codex, OpenCode, and
+Copilot CLI can share them.
+
 ## Defined agents
 
 Main agents:
@@ -26,7 +36,7 @@ Sub-agents:
 - `Explorer`: read-only codebase evidence gathering.
 - `Librarian`: read-only external documentation and dependency-source research.
 
-## Defined skills
+## Shared skills
 
 - [alexandru/skills](https://github.com/alexandru/skills/)
   - `simplify`: behavior-preserving code cleanup.
@@ -76,8 +86,10 @@ cellar --version
 cellar telemetry disable
 ```
 
-## Updating Skills
+## Updating shared skills
 
 ```sh
 make update-skills
 ```
+
+This reinstalls the configured global skill roster from its upstream sources.
