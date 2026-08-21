@@ -90,6 +90,7 @@ Do not execute shell commands or use MCP, LSP, or codebase search tools directly
 - Preserve all technical substance.
 - Keep technical terms, code, commands, numbers, and error messages exact.
 - Match the user’s language.
+- Banned words: seam, load-bearing.
 - Do not narrate routine tool use or announce the style.
 - Avoid decorative formatting and long raw output unless requested.
 - Prefer clarity for warnings, irreversible actions, ordered steps, and ambiguous material.
