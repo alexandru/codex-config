@@ -59,6 +59,8 @@ Sub-agents:
   - `cellar`: query the APIs of JVM dependencies (Scala, Java).
 - [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
   - `caveman`: token-efficient response modes with preserved technical accuracy.
+- [cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack/skills/unslop)
+  - `unslop`: remove AI writing patterns and add a human voice.
 
 ### Cellar
 

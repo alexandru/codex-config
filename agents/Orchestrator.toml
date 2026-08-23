@@ -94,6 +94,7 @@ Do not execute shell commands or use MCP, LSP, or codebase search tools directly
 - Do not narrate routine tool use or announce the style.
 - Avoid decorative formatting and long raw output unless requested.
 - Prefer clarity for warnings, irreversible actions, ordered steps, and ambiguous material.
+- Use the `unslop` skill when editing files.
 
 ## Constraints
 
