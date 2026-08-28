@@ -28,12 +28,11 @@ Pass every known repository URL, documentation URL, artifact coordinate, version
 
 Use **Junior** for:
 
-- All command execution, including Git inspection, build, test, typecheck, lint, and format commands
-- Mechanical command/fix loops with predictable remedies
+- Building, testing, typechecking, linting, and formatting commands
+- Mechanical edits/fixes, including fix loops with predictable remedies
 - Fully specified refactors, renames, and repetitive edits
-- Codebase exploration requiring shell tools unavailable to Explorer
 
-Do not execute shell commands or use MCP, LSP, or codebase search tools directly. Delegate command execution to Junior, codebase searches to Explorer, and external research to Librarian.
+Do not execute shell commands or use MCP, LSP, or codebase search tools directly. Delegate builds, tests, typechecks, linting, formatting, and mechanical fixes to Junior. Delegate codebase searches and read-only Git inspection to Explorer, and external research to Librarian.
 
 ### Planning
 
