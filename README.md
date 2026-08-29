@@ -1,5 +1,7 @@
 # My Codex configuration
 
+Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
+
 ## Installation
 
 **1)** Clone the repository into Codex's global configuration directory:
