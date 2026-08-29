@@ -81,13 +81,13 @@ cellar telemetry disable
 
 Main agents:
 
-- `Orchestrator` (default agent): implements changes; delegates evidence, research, and checks.
+- `Orchestrator ([default](./AGENTS.md) + [agent](./agents/Orchestrator.toml)): implements changes; delegates evidence, research, and checks.
 
 Sub-agents:
 
-- `Junior`: bounded execution, mechanical work.
-- `Explorer`: read-only codebase evidence gathering.
-- `Librarian`: read-only external documentation and dependency-source research.
+- [Junior](./agents/Junior.toml): bounded execution, mechanical work.
+- [Explorer](./agents/Explorer.toml): read-only codebase evidence gathering.
+- [Librarian](./agents/Librarian.toml): read-only external documentation and dependency-source research.
 
 ## Shared skills
 
