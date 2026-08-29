@@ -31,7 +31,7 @@ Copilot CLI can share them.
 </details>
 
 <details>
-<summary>STEP 3 (optional) — Install Cellar (tooling)</summary>
+<summary>STEP 3 — (optional) Install Cellar</summary>
 
 [Cellar](https://github.com/VirtusLab/cellar) is useful for JVM dependency API lookup, and this repo's [Makefile](./Makefile) also installs its associated skill.
 
