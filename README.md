@@ -4,7 +4,8 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 
 ## Installation
 
-**1)** Clone the repository into Codex's global configuration directory:
+<details>
+<summary>STEP 1 — Clone the repository</summary>
 
 ```sh
 git clone https://github.com/alexandru/codex-config.git ~/.codex
@@ -15,8 +16,10 @@ If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/
 ```sh
 export CODEX_HOME=/absolute/path/to/codex-config
 ```
+</details>
 
-**2)** Install the shared third-party skills globally:
+<details>
+<summary>STEP 2 — Install the shared third-party skills globally</summary>
 
 ```sh
 cd ~/.codex
@@ -25,6 +28,7 @@ make install-skills
 
 The skills are installed under `~/.agents/skills`, where Codex, OpenCode, and
 Copilot CLI can share them.
+</details>
 
 ## Defined agents
 
