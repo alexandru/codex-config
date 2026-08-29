@@ -6,13 +6,30 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 
 <details>
 <summary>STEP 1 — Clone the repository</summary>
-
+**WARN** — This is for a fresh Copilot instalation (no history):
 ```sh
 git clone https://github.com/alexandru/codex-config.git ~/.codex
 ```
 
-If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
+**WARN:** This is Codex's working directory, so you may already have a `~/.codex` that you may need to delete, in which case you could lose all your sessios. An alternative would be...
+```sh
+if [[ -d ~/.codex ]]; then
+  # Clones in temporary directory
+  git clone https://github.com/alexandru/codex-config.git /tmp/codex-config
+  echo
+  # Sync all the files from clone to your working dir
+  rsync -rcv /tmp/codex-config/ ~/.codex/
+  # Doing some index cleanup
+  cd ~/.codex
+  git pull
+  # Cleanup
+  rm -rf /tmp/codex-config
+else
+  git clone https://github.com/alexandru/codex-config.git ~/.codex
+fi 
+```
 
+If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
 ```sh
 export CODEX_HOME=/absolute/path/to/codex-config
 ```
