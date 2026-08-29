@@ -36,7 +36,7 @@ export CODEX_HOME=/absolute/path/to/codex-config
 </details>
 
 <details>
-<summary>STEP 2 — Install the shared third-party skills globally</summary>
+<summary>STEP 2 — Install the shared skills globally</summary>
 
 ```sh
 cd ~/.codex
