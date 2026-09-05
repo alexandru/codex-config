@@ -53,7 +53,41 @@ Copilot CLI can share them.
 </details>
 
 <details>
-<summary>STEP 3 — Install Cellar (optional)</summary>
+<summary>STEP 3 — Choose a configuration preset</summary>
+
+### Choose a configuration preset
+
+The [codex-switch](./bin/codex-switch.js) utility switches the default model and
+the models assigned to your agents. It requires Node.js 18 or newer and npm.
+
+```sh
+# List available presets
+./bin/codex-switch
+
+# Apply a preset
+./bin/codex-switch p-openai
+```
+
+The switcher reads [config.presets.json](./config.presets.json) and updates the
+model and reasoning effort in [config.toml](./config.toml) and the files under
+[agents](./agents). It preserves unrelated settings and agent instructions.
+It resolves paths relative to this repository, even when invoked from another
+directory or through a symlink.
+
+The `p-openai` preset uses `gpt-6-astra` with `medium` effort for the default
+model and Orchestrator, `gpt-5.6-luna-fast` with `high` effort for Junior, and
+`gpt-5.6-luna-fast` with `medium` effort for Explorer and Librarian.
+
+To add a preset, copy the `p-openai` entry under a new name and edit its model
+settings. Each preset must specify the default and all four agents, so switching
+does not retain model assignments from the previous preset.
+
+Start a new Codex session after switching. Command-line model overrides and
+project configuration can override the selected defaults.
+</details>
+
+<details>
+<summary>STEP 4 — Install Cellar (optional)</summary>
 
 ### Install Cellar (optional)
 

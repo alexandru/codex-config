@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" = /* ]] || SOURCE="$DIR/$SOURCE"
+done
+DIR="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+cd "$DIR"
+
+if [ ! -d node_modules/smol-toml ] || [ package.json -nt node_modules ]; then
+  npm install --no-package-lock
+fi
+
+exec node "$DIR/bin/codex-switch.js" "$@"
