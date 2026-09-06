@@ -47,6 +47,7 @@ Do not execute shell commands or use MCP, LSP, or codebase search tools directly
 
 - Plan delegation to optimize quality, elapsed time, and cost.
 - When tasks for the same subagent must run sequentially and require no intervening Orchestrator decision, combine them into one self-contained delegation instead of making separate calls.
+- When spawning a subagent, you MUST prefix its `task_name` with its agent type, using lowercase letters, digits, and underscores. For example, use `junior_resume_status` for a Junior agent so its path is `/root/junior_resume_status`.
 
 ### Delegation handoff
 
