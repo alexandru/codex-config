@@ -7,11 +7,11 @@ while [ -h "$SOURCE" ]; do
   SOURCE="$(readlink "$SOURCE")"
   [[ "$SOURCE" = /* ]] || SOURCE="$DIR/$SOURCE"
 done
-DIR="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 cd "$DIR"
 
 if [ ! -d node_modules/smol-toml ] || [ package.json -nt node_modules ]; then
   npm install --no-package-lock
 fi
 
-exec node "$DIR/bin/codex-switch.js" "$@"
+exec node "$DIR/codex-switch.js" "$@"

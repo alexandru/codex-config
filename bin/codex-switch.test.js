@@ -112,7 +112,7 @@ function createFixture() {
       },
     })
   );
-  fs.symlinkSync(path.join(repoRoot, "node_modules"), path.join(fixture, "node_modules"), "dir");
+  fs.symlinkSync(path.join(__dirname, "node_modules"), path.join(fixture, "bin", "node_modules"), "dir");
   return fixture;
 }
 
