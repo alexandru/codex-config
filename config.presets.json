@@ -8,15 +8,15 @@
         "model_reasoning_effort": "medium"
       },
       "Junior": {
-        "model": "gpt-5.6-luna-fast",
+        "model": "gpt-5.6-luna",
         "model_reasoning_effort": "high"
       },
       "Explorer": {
-        "model": "gpt-5.6-luna-fast",
+        "model": "gpt-5.6-luna",
         "model_reasoning_effort": "medium"
       },
       "Librarian": {
-        "model": "gpt-5.6-luna-fast",
+        "model": "gpt-5.6-luna",
         "model_reasoning_effort": "medium"
       }
     }

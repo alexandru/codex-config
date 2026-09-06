@@ -68,21 +68,17 @@ the models assigned to your agents. It requires Node.js 18 or newer and npm.
 ./bin/codex-switch p-openai
 ```
 
-The switcher reads [config.presets.json](./config.presets.json) and updates the
-model and reasoning effort in [config.toml](./config.toml) and the files under
-[agents](./agents). It preserves unrelated settings and agent instructions.
-It resolves paths relative to this repository, even when invoked from another
-directory or through a symlink.
+The switcher generates your local `config.toml` from:
 
-The `p-openai` preset uses `gpt-6-astra` with `medium` effort for the default
-model and Orchestrator, `gpt-5.6-luna-fast` with `high` effort for Junior, and
-`gpt-5.6-luna-fast` with `medium` effort for Explorer and Librarian.
+- [config.common.json](./config.common.json)
+- [config.presets.json](./config.presets.json)
 
-To add a preset, copy the `p-openai` entry under a new name and edit its model
-settings. Each preset must specify the default and all four agents, so switching
-does not retain model assignments from the previous preset.
+`config.toml` is not tracked by Git. Existing local settings, such as project
+trust entries, are preserved unless overridden by the shared configuration.
 
-Start a new Codex session after switching. Command-line model overrides and
+**WARNING:** Run `codex-switch` at least once before starting Codex.
+
+Run the switcher between Codex sessions. Command-line model overrides and
 project configuration can override the selected defaults.
 </details>
 

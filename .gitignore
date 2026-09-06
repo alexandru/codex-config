@@ -1,4 +1,6 @@
 *.sqlite*
+/config.toml
+/.config.toml.*.tmp
 .credentials.json
 .tmp/
 app-server-daemon/

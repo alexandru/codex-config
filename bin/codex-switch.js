@@ -3,6 +3,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { isDeepStrictEqual } = require("node:util");
 const { parse, stringify } = require("smol-toml");
 
@@ -35,6 +36,98 @@ function updateModels(source, settings) {
   return stringify(expected);
 }
 
+function isPlainRecord(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function deepMerge(base, overlay) {
+  if (!isPlainRecord(base) || !isPlainRecord(overlay)) return overlay;
+  const keys = new Set([...Object.keys(base), ...Object.keys(overlay)]);
+  return Object.fromEntries([...keys].map((key) => [
+    key,
+    Object.hasOwn(overlay, key)
+      ? (Object.hasOwn(base, key) ? deepMerge(base[key], overlay[key]) : overlay[key])
+      : base[key],
+  ]));
+}
+
+function rejectNulls(value, label, path = label) {
+  if (value === null) throw new Error(`${path} must not contain null`);
+  if (!value || typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => rejectNulls(item, label, `${path}[${index}]`));
+    return;
+  }
+  for (const key of Object.keys(value)) rejectNulls(value[key], label, `${path}.${key}`);
+}
+
+function readCommon() {
+  const file = path.join(root, "config.common.json");
+  const common = JSON.parse(fs.readFileSync(file, "utf8"));
+  if (!isPlainRecord(common)) throw new Error("config.common.json must contain a JSON object");
+  rejectNulls(common, "config.common.json");
+  return common;
+}
+
+function readOptionalRoot() {
+  const file = path.join(root, "config.toml");
+  try {
+    const contents = fs.readFileSync(file);
+    return { exists: true, contents, config: parse(contents.toString("utf8")) };
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return { exists: false, contents: undefined, config: {} };
+  }
+}
+
+function readRootSnapshot() {
+  const file = path.join(root, "config.toml");
+  try {
+    return { exists: true, contents: fs.readFileSync(file) };
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return { exists: false, contents: undefined };
+  }
+}
+
+function assertRootSnapshot(snapshot) {
+  const current = readRootSnapshot();
+  if (current.exists !== snapshot.exists ||
+      (current.exists && !current.contents.equals(snapshot.contents))) {
+    throw new Error("config.toml changed while preparing configuration; no files written");
+  }
+}
+
+function createRootTemp(contents, mode) {
+  const directory = path.dirname(path.join(root, "config.toml"));
+  let file;
+  let descriptor;
+  try {
+    for (;;) {
+      const candidate = path.join(directory, `.config.toml.${process.pid}.${crypto.randomBytes(8).toString("hex")}.tmp`);
+      try {
+        descriptor = fs.openSync(candidate, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, 0o600);
+        file = candidate;
+        break;
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
+      }
+    }
+    fs.writeFileSync(descriptor, contents, "utf8");
+    if (mode !== undefined) fs.fchmodSync(descriptor, mode);
+    fs.fsyncSync(descriptor);
+    fs.closeSync(descriptor);
+    descriptor = undefined;
+    return file;
+  } catch (error) {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+    if (file !== undefined) fs.rmSync(file, { force: true });
+    throw error;
+  }
+}
+
 function main() {
   const presets = JSON.parse(fs.readFileSync(path.join(root, "config.presets.json"), "utf8"));
   const args = process.argv.slice(2);
@@ -47,6 +140,8 @@ function main() {
   const name = args[0];
   if (!Object.hasOwn(presets, name)) throw new Error(`Unknown preset: ${name}`);
   const preset = presets[name];
+  const common = readCommon();
+  const rootSnapshot = readOptionalRoot();
   validateModel(preset, name);
   for (const key of Object.keys(preset)) {
     if (![...modelKeys, "agents"].includes(key)) throw new Error(`Unknown preset setting: ${key}`);
@@ -67,12 +162,32 @@ function main() {
     targets.push([`agents/${agent}.toml`, settings]);
   }
   // Validate every input before writing any configuration files.
-  const writes = targets.map(([file, settings]) => {
+  const rootModels = Object.fromEntries(modelKeys.map(key => [key, preset[key]]));
+  const expectedRoot = deepMerge(deepMerge(rootSnapshot.config, common), rootModels);
+  rejectNulls(expectedRoot, "generated config.toml");
+  const rootContents = stringify(expectedRoot);
+  if (!isDeepStrictEqual(parse(rootContents), expectedRoot)) {
+    throw new Error("generated config.toml did not round-trip through TOML");
+  }
+  const writes = targets.slice(1).map(([file, settings]) => {
     const destination = path.join(root, file);
     const models = Object.fromEntries(modelKeys.map(key => [key, settings[key]]));
     return [destination, updateModels(fs.readFileSync(destination, "utf8"), models)];
   });
-  for (const [file, contents] of writes) fs.writeFileSync(file, contents);
+  const rootFile = path.join(root, "config.toml");
+  let rootTemp;
+  try {
+    let mode;
+    if (rootSnapshot.exists) mode = fs.statSync(rootFile).mode & 0o777;
+    assertRootSnapshot(rootSnapshot);
+    rootTemp = createRootTemp(rootContents, mode);
+    assertRootSnapshot(rootSnapshot);
+    fs.renameSync(rootTemp, rootFile);
+    rootTemp = undefined;
+    for (const [file, contents] of writes) fs.writeFileSync(file, contents);
+  } finally {
+    if (rootTemp !== undefined) fs.rmSync(rootTemp, { force: true });
+  }
   console.log(`Applied preset: ${name}`);
   console.table(targets.map(([file, settings]) => ({
     configuration: file,

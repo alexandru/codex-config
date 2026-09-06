@@ -1,0 +1,39 @@
+{
+  "approval_policy": "on-request",
+  "approvals_reviewer": "auto_review",
+  "sandbox_mode": "workspace-write",
+  "sandbox_workspace_write": {
+    "network_access": false
+  },
+  "features": {
+    "multi_agent": true,
+    "network_proxy": true,
+    "context_management": {
+      "experimental_mode": true
+    }
+  },
+  "agents": {
+    "enabled": true,
+    "max_concurrent_threads_per_session": 4,
+    "max_depth": 2,
+    "interrupt_message": true
+  },
+  "permissions": {
+    "librarian": {
+      "filesystem": {
+        ":root": "deny",
+        ":minimal": "read",
+        "/tmp/codex-librarian": "write",
+        ":workspace_roots": {
+          ".": "read"
+        }
+      },
+      "network": {
+        "enabled": true,
+        "domains": {
+          "*": "allow"
+        }
+      }
+    }
+  }
+}
