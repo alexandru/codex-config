@@ -1,10 +1,10 @@
 {
   "p-openai": {
-    "model": "gpt-5.6-sol",
+    "model": "gpt-5.6-terra",
     "model_reasoning_effort": "high",
     "agents": {
       "Orchestrator": {
-        "model": "gpt-5.6-sol",
+        "model": "gpt-5.6-terra",
         "model_reasoning_effort": "high"
       },
       "Junior": {
