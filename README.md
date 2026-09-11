@@ -9,12 +9,12 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 
 ### Clone the repository
 
-**WARN** — This is for a fresh Copilot instalation (no history):
+**WARN** — This is for a fresh Codex installation (no history):
 ```sh
 git clone https://github.com/alexandru/codex-config.git ~/.codex
 ```
 
-**WARN:** This is Codex's working directory, so you may already have a `~/.codex` that you may need to delete, in which case you could lose all your sessios. An alternative would be...
+**WARN:** This is Codex's working directory, so you may already have a `~/.codex` that you may need to delete, in which case you could lose all your sessions. An alternative would be...
 ```sh
 if [[ -d ~/.codex ]]; then
   # Clones in temporary directory
@@ -48,8 +48,8 @@ cd ~/.codex
 make install-skills
 ```
 
-The skills are installed under `~/.agents/skills`, where Codex, OpenCode, and
-Copilot CLI can share them.
+The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
+Copilot CLI, and Pi can share them.
 </details>
 
 <details>
@@ -118,7 +118,7 @@ cellar telemetry disable
 
 Main agents:
 
-- `Orchestrator ([default](./AGENTS.md) + [agent](./agents/Orchestrator.toml)): designs and implements changes; delegates evidence, research, and checks.
+- `Orchestrator` ([default](./AGENTS.md) + [agent](./agents/Orchestrator.toml)): designs and implements changes; delegates evidence, research, and checks.
 
 Sub-agents:
 
