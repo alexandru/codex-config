@@ -8,7 +8,7 @@ const { isDeepStrictEqual } = require("node:util");
 const { parse, stringify } = require("smol-toml");
 
 const root = path.resolve(__dirname, "..");
-const agents = ["Orchestrator", "Junior", "Explorer", "Librarian"];
+const agents = ["Orchestrator", "Solo", "Junior", "Explorer", "Librarian"];
 const modelKeys = ["model", "model_reasoning_effort"];
 const efforts = new Set(["none", "minimal", "low", "medium", "high", "xhigh"]);
 
