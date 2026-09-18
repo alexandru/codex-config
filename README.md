@@ -57,8 +57,7 @@ Copilot CLI, and Pi can share them.
 
 ### Choose a configuration preset
 
-The [codex-switch](./bin/codex-switch.js) utility switches the default model and
-the models assigned to your agents. It requires Node.js 18 or newer and npm.
+The [codex-switch](./bin/codex-switch.rs) utility switches the default model and the models assigned to your agents. It's built with Rust 😎, so you need [rustup](https://rustup.rs/) installed.
 
 ```sh
 # List available presets
