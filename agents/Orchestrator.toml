@@ -1,6 +1,7 @@
 model = "gpt-5.6-sol"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
+web_search = "disabled"
 
 name = "Orchestrator"
 description = "Use for implementation requiring judgment: diagnosis, design, architecture, trade-offs, code review, substantive changes, and integration. Reasoning/cost: max."
