@@ -1,7 +1,7 @@
 # Manual global skill installation. Never run automatically (no CI, no hooks).
 # Review upstream skill content before installation.
 
-ALEXANDRU_SKILLS_TAG := v10.0.0
+ALEXANDRU_SKILLS_TAG := v10.2.0
 MATTPOCOCK_SKILLS_TAG := v1.3.1
 SKILLS_AGENT := codex
 SKILLS_INSTALL_FLAGS := -g -a $(SKILLS_AGENT) -y
