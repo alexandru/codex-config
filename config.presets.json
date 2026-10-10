@@ -1,15 +1,15 @@
 {
   "p-openai": {
-    "model": "gpt-6-sol",
-    "model_reasoning_effort": "high",
+    "model": "gpt-6.1-sol",
+    "model_reasoning_effort": "medium",
     "agents": {
       "Orchestrator": {
-        "model": "gpt-6-sol",
-        "model_reasoning_effort": "high"
+        "model": "gpt-6.1-sol",
+        "model_reasoning_effort": "medium"
       },
       "Solo": {
-        "model": "gpt-6-sol",
-        "model_reasoning_effort": "high"
+        "model": "gpt-6.1-sol",
+        "model_reasoning_effort": "medium"
       },
       "Junior": {
         "model": "gpt-6-luna",

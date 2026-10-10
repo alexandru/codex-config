@@ -1,6 +1,4 @@
 *.sqlite*
-.bsp/
-.scala-build/
 /config.toml
 /.config.toml.*.tmp
 .credentials.json

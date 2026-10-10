@@ -12,34 +12,18 @@ NVM_TAG := v0.40.8
 SKILLS_AGENT := codex
 SKILLS_INSTALL_FLAGS := -g -a $(SKILLS_AGENT) -y
 
-.PHONY: all install-scala apply-preset install-node install-skills update-skills check-mattpocock-skills-tag
+.PHONY: all install-rust apply-preset install-node install-skills update-skills check-mattpocock-skills-tag
 
-all: install-scala apply-preset install-node install-skills
+all: install-rust apply-preset install-node install-skills
 
-install-scala:
-	@if command -v scala >/dev/null 2>&1; then \
-		echo "Scala already installed: $$(scala -version 2>&1)"; exit 0; \
+install-rust:
+	@if command -v rustup >/dev/null 2>&1 || [ -x "$$HOME/.cargo/bin/rustup" ]; then \
+		echo "Rust already installed: $$(PATH="$$HOME/.cargo/bin:$$PATH" rustc --version 2>&1)"; exit 0; \
 	fi; \
-	case "$$(uname -s):$$(uname -m)" in \
-		Darwin:arm64) launcher=cs-aarch64-apple-darwin.gz ;; \
-		Darwin:*) launcher=cs-x86_64-apple-darwin.gz ;; \
-		Linux:aarch64) launcher=cs-aarch64-pc-linux.gz ;; \
-		Linux:*) launcher=cs-x86_64-pc-linux.gz ;; \
-		*) echo "Unsupported platform: $$(uname -s) $$(uname -m)" >&2; exit 1 ;; \
-	esac; \
-	if [ "$$(uname -s)" = Darwin ] && command -v brew >/dev/null 2>&1; then \
-		brew install coursier/formulas/coursier; \
-		cs setup --yes; \
-	else \
-		csbin="$$(mktemp)"; \
-		trap 'rm -f "$$csbin"' EXIT; \
-		curl -fL "https://github.com/coursier/launchers/raw/master/$$launcher" | gzip -d > "$$csbin" && \
-		chmod +x "$$csbin" && \
-		"$$csbin" setup --yes; \
-	fi
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 apply-preset:
-	PATH="$$HOME/.local/share/coursier/bin:$$HOME/Library/Application Support/Coursier/bin:$$PATH" ./bin/codex-switch $(PRESET)
+	PATH="$$HOME/.cargo/bin:$$PATH" ./bin/codex-switch $(PRESET)
 
 install-node:
 	@if command -v node >/dev/null 2>&1 && command -v npx >/dev/null 2>&1; then \
