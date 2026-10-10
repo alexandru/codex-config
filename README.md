@@ -4,6 +4,10 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 
 ## Installation
 
+`make` does everything at once: it installs Scala and Node.js when missing,
+applies the default preset, and installs the shared skills. The steps below
+describe what it does.
+
 <details>
 <summary>STEP 1 — Clone the repository</summary>
 
@@ -57,7 +61,9 @@ Copilot CLI, and Pi can share them.
 
 ### Choose a configuration preset
 
-The [codex-switch](./bin/codex-switch.rs) utility switches the default model and the models assigned to your agents. It's built with Rust 😎, so you need [rustup](https://rustup.rs/) installed.
+The [codex-switch](./bin/codex-switch.scala) utility switches the default model and the models assigned to your agents. It's built with Scala 😎, so you need [Scala](https://www.scala-lang.org/) installed.
+
+The switcher reads `CODEX_HOME` when set, and the current working directory otherwise, so run it from the repository root.
 
 ```sh
 # List available presets

@@ -15,7 +15,7 @@
   "agents": {
     "enabled": true,
     "max_concurrent_threads_per_session": 4,
-    "max_depth": 2,
+    "max_depth": 16,
     "interrupt_message": true
   },
   "permissions": {
