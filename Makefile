@@ -17,25 +17,37 @@ SKILLS_INSTALL_FLAGS := -g -a $(SKILLS_AGENT) -y
 all: install-rust apply-preset install-node install-skills
 
 install-rust:
-	@if command -v rustup >/dev/null 2>&1 || [ -x "$$HOME/.cargo/bin/rustup" ]; then \
-		echo "Rust already installed: $$(PATH="$$HOME/.cargo/bin:$$PATH" rustc --version 2>&1)"; exit 0; \
+	@set -e; \
+	if command -v rustup >/dev/null 2>&1 || [ -x "$$HOME/.cargo/bin/rustup" ]; then \
+		version=$$(PATH="$$HOME/.cargo/bin:$$PATH" rustc --version 2>&1); \
+		echo "Rust already installed: $$version"; exit 0; \
 	fi; \
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+	installer=$$(mktemp); \
+	trap 'rm -f "$$installer"' 0; \
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$$installer"; \
+	sh "$$installer" -y
 
 apply-preset:
 	PATH="$$HOME/.cargo/bin:$$PATH" ./bin/codex-switch $(PRESET)
 
 install-node:
-	@if command -v node >/dev/null 2>&1 && command -v npx >/dev/null 2>&1; then \
-		echo "Node already installed: $$(node --version)"; exit 0; \
+	@set -e; \
+	if command -v node >/dev/null 2>&1 && command -v npx >/dev/null 2>&1; then \
+		version=$$(node --version); \
+		echo "Node already installed: $$version"; exit 0; \
 	fi; \
 	case "$$(uname -s)" in \
 		Darwin) brew install node ;; \
 		Linux) \
 			if [ ! -s "$$HOME/.nvm/nvm.sh" ]; then \
-				curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$(NVM_TAG)/install.sh" | bash; \
+				installer=$$(mktemp); \
+				trap 'rm -f "$$installer"' 0; \
+				curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$(NVM_TAG)/install.sh" -o "$$installer"; \
+				bash "$$installer"; \
 			fi; \
-			. "$$HOME/.nvm/nvm.sh" && nvm install --lts && nvm alias default 'lts/*' ;; \
+			. "$$HOME/.nvm/nvm.sh"; \
+			nvm install --lts; \
+			nvm alias default 'lts/*' ;; \
 		*) echo "Unsupported platform: $$(uname -s)" >&2; exit 1 ;; \
 	esac
 

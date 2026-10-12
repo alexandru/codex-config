@@ -15,25 +15,31 @@ describe what it does.
 
 **WARN** — This is for a fresh Codex installation (no history):
 ```sh
-git clone https://github.com/alexandru/codex-config.git ~/.codex
+git clone https://github.com/alexandru/codex-config.git ~/.codex &&
+  git -C ~/.codex config --local status.showUntrackedFiles no
 ```
 
 **WARN:** This is Codex's working directory, so you may already have a `~/.codex` that you may need to delete, in which case you could lose all your sessions. An alternative would be...
-```sh
-if [[ -d ~/.codex ]]; then
-  # Clones in temporary directory
-  git clone https://github.com/alexandru/codex-config.git /tmp/codex-config
-  echo
-  # Sync all the files from clone to your working dir
-  rsync -rcv /tmp/codex-config/ ~/.codex/
-  # Doing some index cleanup
-  cd ~/.codex
-  git pull
-  # Cleanup
-  rm -rf /tmp/codex-config
-else
-  git clone https://github.com/alexandru/codex-config.git ~/.codex
-fi 
+```bash
+(
+  set -e
+  if [[ -d ~/.codex ]]; then
+    # Clones in temporary directory
+    git clone https://github.com/alexandru/codex-config.git /tmp/codex-config
+    echo
+    # Sync all the files from clone to your working dir
+    rsync -rcv /tmp/codex-config/ ~/.codex/
+    # Doing some index cleanup
+    cd ~/.codex
+    git pull
+    git config --local status.showUntrackedFiles no
+    # Cleanup
+    rm -rf /tmp/codex-config
+  else
+    git clone https://github.com/alexandru/codex-config.git ~/.codex
+    git -C ~/.codex config --local status.showUntrackedFiles no
+  fi
+)
 ```
 
 If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
@@ -54,6 +60,8 @@ For a fresh Codex installation (no history):
     $codexHome = Join-Path $env:USERPROFILE '.codex'
     git clone https://github.com/alexandru/codex-config.git $codexHome
     if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
+    git -C $codexHome config --local status.showUntrackedFiles no
+    if ($LASTEXITCODE -ne 0) { throw 'Git config failed.' }
 }
 ```
 
@@ -70,6 +78,8 @@ For an existing installation, close Codex and back up `.codex`. This preserves s
 
     robocopy $cloneDir $codexHome /E
     if ($LASTEXITCODE -ge 8) { throw "Copy failed; temporary clone retained at $cloneDir" }
+    git -C $codexHome config --local status.showUntrackedFiles no
+    if ($LASTEXITCODE -ne 0) { throw "Git config failed; temporary clone retained at $cloneDir" }
     Remove-Item -LiteralPath $cloneDir -Recurse -Force
 }
 ```
@@ -77,8 +87,11 @@ For an existing installation, close Codex and back up `.codex`. This preserves s
 For a nonstandard directory:
 
 ```powershell
-$env:CODEX_HOME = 'D:\codex-config'
-[Environment]::SetEnvironmentVariable('CODEX_HOME', $env:CODEX_HOME, 'User')
+& {
+    $ErrorActionPreference = 'Stop'
+    $env:CODEX_HOME = 'D:\codex-config'
+    [Environment]::SetEnvironmentVariable('CODEX_HOME', $env:CODEX_HOME, 'User')
+}
 ```
 </details>
 
@@ -88,8 +101,7 @@ $env:CODEX_HOME = 'D:\codex-config'
 ### Install the shared skills globally
 
 ```sh
-cd ~/.codex
-make install-skills
+cd ~/.codex && make install-skills
 ```
 
 The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
@@ -103,12 +115,15 @@ Copilot CLI, and Pi can share them.
 
 The [codex-switch](./bin/codex-switch.rs) utility switches the default model and the models assigned to your agents. It's built with Rust 😎, so you need [rustup](https://rustup.rs/) installed.
 
-```sh
-# List available presets
-./bin/codex-switch
+```bash
+(
+  set -e
+  # List available presets
+  ./bin/codex-switch
 
-# Apply a preset
-./bin/codex-switch p-openai
+  # Apply a preset
+  ./bin/codex-switch p-openai
+)
 ```
 
 The switcher generates your local `config.toml` from:
@@ -134,26 +149,38 @@ project configuration can override the selected defaults.
 
 Install [Coursier](https://get-coursier.io/docs/cli-installation) first:
 
-```sh
+```bash
 ## MacOS
-brew install coursier/formulas/coursier
-cs setup
+brew install coursier/formulas/coursier && cs setup
+```
 
-## Linux x86-64 (aka AMD64)
-curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+```bash
+(
+  set -eo pipefail
+  ## Linux x86-64 (aka AMD64)
+  curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+)
+```
 
-## Linux ARM64
-curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+```bash
+(
+  set -eo pipefail
+  ## Linux ARM64
+  curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+)
 ```
 
 Then install Cellar via Coursier:
 
-```sh
-cs install --contrib cellar
-cellar --version
+```bash
+(
+  set -e
+  cs install --contrib cellar
+  cellar --version
 
-# Disable telemetry
-cellar telemetry disable
+  # Disable telemetry
+  cellar telemetry disable
+)
 ```
 </details>
 
