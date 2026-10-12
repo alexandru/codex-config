@@ -43,29 +43,38 @@ export CODEX_HOME=/absolute/path/to/codex-config
 
 ### Windows (PowerShell)
 
-Install Git first. The default directory is `C:\Users\<username>\.codex`, expressed below as `Join-Path $env:USERPROFILE '.codex'`.
+Requires Git. Default directory: `C:\Users\<username>\.codex`.
 
 For a fresh Codex installation (no history):
 
 ```powershell
-$codexHome = Join-Path $env:USERPROFILE '.codex'
-git clone https://github.com/alexandru/codex-config.git $codexHome
+& {
+    $ErrorActionPreference = 'Stop'
+    $PSNativeCommandUseErrorActionPreference = $false
+    $codexHome = Join-Path $env:USERPROFILE '.codex'
+    git clone https://github.com/alexandru/codex-config.git $codexHome
+    if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
+}
 ```
 
-If `.codex` already exists, back it up first. The following copies the repository into it without deleting existing sessions or other files, but overwrites files with matching names. Run this with Codex closed:
+For an existing installation, close Codex and back up `.codex`. This preserves sessions but overwrites matching files; a failed copy may leave partial updates.
 
 ```powershell
-$codexHome = Join-Path $env:USERPROFILE '.codex'
-$cloneDir = Join-Path ([System.IO.Path]::GetTempPath()) ('codex-config-' + [guid]::NewGuid())
-git clone https://github.com/alexandru/codex-config.git $cloneDir
-if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
+& {
+    $ErrorActionPreference = 'Stop'
+    $PSNativeCommandUseErrorActionPreference = $false
+    $codexHome = Join-Path $env:USERPROFILE '.codex'
+    $cloneDir = Join-Path ([System.IO.Path]::GetTempPath()) ('codex-config-' + [guid]::NewGuid())
+    git clone https://github.com/alexandru/codex-config.git $cloneDir
+    if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
 
-robocopy $cloneDir $codexHome /E
-if ($LASTEXITCODE -ge 8) { throw "Copy failed; temporary clone retained at $cloneDir" }
-Remove-Item -LiteralPath $cloneDir -Recurse -Force
+    robocopy $cloneDir $codexHome /E
+    if ($LASTEXITCODE -ge 8) { throw "Copy failed; temporary clone retained at $cloneDir" }
+    Remove-Item -LiteralPath $cloneDir -Recurse -Force
+}
 ```
 
-For a nonstandard directory, set `CODEX_HOME` for the current PowerShell session and persist it for future sessions:
+For a nonstandard directory:
 
 ```powershell
 $env:CODEX_HOME = 'D:\codex-config'
