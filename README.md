@@ -4,10 +4,6 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 
 ## Installation
 
-`make` does everything at once: it installs Rust and Node.js when missing,
-applies the default preset, and installs the shared skills. The steps below
-describe what it does.
-
 <details>
 <summary>STEP 1 — Clone the repository</summary>
 
@@ -113,7 +109,7 @@ Copilot CLI, and Pi can share them.
 
 ### Choose a configuration preset
 
-The [codex-switch](./bin/codex-switch.rs) utility switches the default model and the models assigned to your agents. It's built with Rust 😎, so you need [rustup](https://rustup.rs/) installed.
+The [codex-switch](./bin/codex-switch.py) utility switches the default model and the models assigned to your agents. It's built with Python 🐍, so you need [pipx](https://pipx.pypa.io/) installed (`make install-pipx`).
 
 ```bash
 (
@@ -122,7 +118,7 @@ The [codex-switch](./bin/codex-switch.rs) utility switches the default model and
   ./bin/codex-switch
 
   # Apply a preset
-  ./bin/codex-switch p-openai
+  ./bin/codex-switch default
 )
 ```
 

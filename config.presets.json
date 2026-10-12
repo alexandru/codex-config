@@ -1,5 +1,31 @@
 {
-  "p-openai": {
+  "default": {
+    "model": "gpt-6.1-sol",
+    "model_reasoning_effort": "medium",
+    "agents": {
+      "Orchestrator": {
+        "model": "gpt-6.1-sol",
+        "model_reasoning_effort": "medium"
+      },
+      "Solo": {
+        "model": "gpt-6.1-sol",
+        "model_reasoning_effort": "medium"
+      },
+      "Junior": {
+        "model": "gpt-6-luna",
+        "model_reasoning_effort": "xhigh"
+      },
+      "Explorer": {
+        "model": "gpt-6-luna",
+        "model_reasoning_effort": "high"
+      },
+      "Librarian": {
+        "model": "gpt-6-luna",
+        "model_reasoning_effort": "high"
+      }
+    }
+  },
+  "gpt-6": {
     "model": "gpt-6.1-sol",
     "model_reasoning_effort": "medium",
     "agents": {

@@ -1,4 +1,7 @@
 *.sqlite*
+.mypy_cache
+.ruff_cache
+__pycache__
 /config.toml
 /.config.toml.*.tmp
 .credentials.json

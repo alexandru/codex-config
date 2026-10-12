@@ -1,34 +1,38 @@
 # Bootstrap and manage the local Codex configuration.
-# The default target installs every missing prerequisite, applies the default
-# preset, and installs the shared skills globally. Never run automatically
-# (no CI, no hooks); review upstream skill content before installation.
+# The default target installs every missing prerequisite, generates the default
+# configuration when missing, and installs the shared skills globally. Never run
+# automatically (no CI, no hooks); review upstream skill content before installation.
 
 .NOTPARALLEL:
 
-PRESET ?= p-openai
 ALEXANDRU_SKILLS_TAG := v11.0.4
 MATTPOCOCK_SKILLS_TAG := v1.3.1
 NVM_TAG := v0.40.8
 SKILLS_AGENT := codex
 SKILLS_INSTALL_FLAGS := -g -a $(SKILLS_AGENT) -y
 
-.PHONY: all install-rust apply-preset install-node install-skills update-skills check-mattpocock-skills-tag
+.PHONY: all install-pipx generate-config install-node check-mattpocock-skills-tag install-skills update-skills test-codex-switch
 
-all: install-rust apply-preset install-node install-skills
+all: install-pipx generate-config install-node install-skills
 
-install-rust:
+# codex-switch runs through pipx.
+install-pipx:
 	@set -e; \
-	if command -v rustup >/dev/null 2>&1 || [ -x "$$HOME/.cargo/bin/rustup" ]; then \
-		version=$$(PATH="$$HOME/.cargo/bin:$$PATH" rustc --version 2>&1); \
-		echo "Rust already installed: $$version"; exit 0; \
+	if command -v pipx >/dev/null 2>&1; then \
+		echo "pipx already installed: $$(pipx --version)"; exit 0; \
 	fi; \
-	installer=$$(mktemp); \
-	trap 'rm -f "$$installer"' 0; \
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$$installer"; \
-	sh "$$installer" -y
+	case "$$(uname -s)" in \
+		Darwin) brew install pipx ;; \
+		Linux) sudo apt-get install -y pipx ;; \
+		*) echo "Unsupported platform: $$(uname -s)" >&2; exit 1 ;; \
+	esac
 
-apply-preset:
-	PATH="$$HOME/.cargo/bin:$$PATH" ./bin/codex-switch $(PRESET)
+generate-config:
+	@if [ ! -f config.toml ]; then \
+		./bin/codex-switch default; \
+	else \
+		echo "config.toml already exists; leaving it untouched"; \
+	fi
 
 install-node:
 	@set -e; \
@@ -90,3 +94,6 @@ install-skills:
 
 update-skills: check-mattpocock-skills-tag
 	$(MAKE) install-skills
+
+test-codex-switch:
+	./bin/codex-switch-test.py
