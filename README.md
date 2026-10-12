@@ -92,12 +92,12 @@ For a nonstandard directory:
 </details>
 
 <details>
-<summary>STEP 2 — Install the shared skills globally</summary>
+<summary>STEP 2 — Install dependencies</summary>
 
-### Install the shared skills globally
+### Install dependencies
 
 ```sh
-cd ~/.codex && make install-skills
+cd ~/.codex && make
 ```
 
 The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
@@ -105,9 +105,9 @@ Copilot CLI, and Pi can share them.
 </details>
 
 <details>
-<summary>STEP 3 — Choose a configuration preset</summary>
+<summary>STEP 3 — Choose a configuration preset (optional)</summary>
 
-### Choose a configuration preset
+### Choose a configuration preset (optional)
 
 The [codex-switch](./bin/codex-switch.py) utility switches the default model and the models assigned to your agents. It's built with Python 🐍, so you need [pipx](https://pipx.pypa.io/) installed (`make install-pipx`).
 
@@ -129,8 +129,6 @@ The switcher generates your local `config.toml` from:
 
 `config.toml` is not tracked by Git. Existing local settings, such as project
 trust entries, are preserved unless overridden by the shared configuration.
-
-**WARNING:** Run `codex-switch` at least once before starting Codex.
 
 Run the switcher between Codex sessions. Command-line model overrides and
 project configuration can override the selected defaults.
