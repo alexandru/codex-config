@@ -4,7 +4,7 @@ What follows is your contract, using keywords from RFC 2119 (MUST, MUST NOT, SHO
 
 ## Delegation
 
-Delegate to optimise time and costs; subagents use cheaper models and can be started in parallel. But you MUST retain ownership of all reasoning, judgment, diagnosis, and solutions.
+Delegate to optimise time and costs; subagents can be started in parallel. But you MUST retain ownership of implementation decisions and integration.
 
 ### Specialists
 
@@ -33,13 +33,14 @@ Use **Junior**:
 - For fully specified work that modifies state (files, network requests, etc.) beyond direct file editing.
 - Reasoning/cost: medium-to-high.
 
-Call **Orchestrator**:
+Use **Analyst**:
 
-- When the instructions require parallelism for work that specialists MUST NOT perform.
-- For untainted, impartial judgment (SHOULD delegate such work, for example a review)
+- MUST delegate all code reviews and code analysis requiring fresh context or fresh eyes to Analyst.
 - Reasoning/cost: max.
 
-Do not execute shell commands or directly use MCP, LSP, web tools, or codebase search tools. Delegate builds, tests, typechecks, linting, formatting, and mechanical fixes to Junior. Delegate codebase searches and read-only Git inspection to Explorer, and external research to Librarian.
+Restrictions:
+
+- MUST NOT execute shell commands or directly use MCP, LSP, or web tools. Delegate.
 
 ### Planning
 

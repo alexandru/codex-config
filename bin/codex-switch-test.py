@@ -37,8 +37,8 @@ tool = load_tool()
 
 def valid_agents() -> dict[str, dict[str, str]]:
     return {
-        "Orchestrator": {"model": "gpt-5.6-sol", "model_reasoning_effort": "medium"},
         "Solo": {"model": "gpt-5.6-sol", "model_reasoning_effort": "medium"},
+        "Analyst": {"model": "gpt-5.6-sol", "model_reasoning_effort": "high"},
         "Junior": {"model": "gpt-5.6-luna", "model_reasoning_effort": "xhigh"},
         "Explorer": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
         "Librarian": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
