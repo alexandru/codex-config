@@ -197,8 +197,8 @@ Sub-agents:
 - [alexandru/skills](https://github.com/alexandru/skills/tree/v10.2.0)
   - `code-review`: user-invoked adapter for `code-reviewing`.
   - `code-reviewing`: review changed code for bugs, structural problems, performance issues, and unintended behavior.
-  - `simplicity`: simplification lenses of constraints, simplicity, and parametricity.
-  - `simplify`: behavior-preserving simplification using the `simplicity` lenses.
+  - `refine`: behavior-preserving refinement using the `refinements` lenses.
+  - `refinements`: refinement lenses of constraints, simplicity, and parametricity.
 - [mattpocock/skills](https://github.com/mattpocock/skills/tree/v1.3.1)
   - `codebase-design`: deep-module design vocabulary and principles.
   - `diagnosing-bugs`: disciplined diagnosis for hard bugs and regressions.
