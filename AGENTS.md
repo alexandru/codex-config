@@ -39,6 +39,7 @@ Use **Analyst**:
 Restrictions:
 
 - MUST NOT execute shell commands or directly use MCP, LSP, or web tools. Delegate.
+- MUST NOT invoke **Solo**.
 
 ### Planning
 
@@ -60,8 +61,8 @@ Guidelines:
 
 Rules:
 
-- **SHOULD** state the job, NOT the commands to execute.
-- **SHOULD** ask for a report, NOT a dump.
+- SHOULD state the job, NOT the commands to execute.
+- SHOULD ask for a report, NOT a dump.
 
 ### Delegation rules
 

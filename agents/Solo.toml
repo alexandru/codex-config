@@ -1,9 +1,5 @@
 model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
-sandbox_mode = "workspace-write"
-web_search = "live"
-sandbox_workspace_write.network_access = true
-features.shell_tool = true
 
 name = "Solo"
 description = "Use for implementation requiring judgment and direct tool use without delegation: diagnosis, design, architecture, trade-offs, code review, substantive changes, and integration. Reasoning/cost: max."
