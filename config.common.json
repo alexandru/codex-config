@@ -11,10 +11,7 @@
   "features": {
     "multi_agent": true,
     "network_proxy": true,
-    "daemon_auto_start": false,
-    "context_management": {
-      "experimental_mode": true
-    }
+    "daemon_auto_start": false
   },
   "agents": {
     "enabled": true,
