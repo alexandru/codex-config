@@ -45,7 +45,6 @@ Use **Analyst**:
 
 Restrictions:
 
-- MUST NOT execute shell commands or directly use MCP, LSP, or web tools. Delegate.
 - MUST NOT invoke **Solo**.
 
 ### Planning
