@@ -3,13 +3,13 @@
     "model": "gpt-6.1-sol",
     "model_reasoning_effort": "medium",
     "agents": {
-      "Solo": {
+      "Orchestrator": {
         "model": "gpt-6.1-sol",
         "model_reasoning_effort": "medium"
       },
-      "Analyst": {
+      "Solo": {
         "model": "gpt-6.1-sol",
-        "model_reasoning_effort": "high"
+        "model_reasoning_effort": "medium"
       },
       "Junior": {
         "model": "gpt-6-luna",
@@ -29,13 +29,13 @@
     "model": "gpt-6.1-sol",
     "model_reasoning_effort": "medium",
     "agents": {
-      "Solo": {
+      "Orchestrator": {
         "model": "gpt-6.1-sol",
         "model_reasoning_effort": "medium"
       },
-      "Analyst": {
+      "Solo": {
         "model": "gpt-6.1-sol",
-        "model_reasoning_effort": "high"
+        "model_reasoning_effort": "medium"
       },
       "Junior": {
         "model": "gpt-6-luna",

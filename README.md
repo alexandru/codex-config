@@ -187,7 +187,6 @@ Main agents:
 
 Sub-agents:
 
-- [Analyst](./agents/Analyst.toml): reads code and evidence, exercises judgment, and advises without making changes.
 - [Junior](./agents/Junior.toml): bounded execution, mechanical work.
 - [Explorer](./agents/Explorer.toml): read-only codebase evidence gathering.
 - [Librarian](./agents/Librarian.toml): read-only external documentation and dependency-source research.
