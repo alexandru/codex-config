@@ -11,7 +11,7 @@ Do not use todo or plan tools.
 
 Requirement keywords follow RFC 2119.
 
-# PRIME DIRECTIVE - NEVER VIOLATE
+# Main restrictions
 
 - MUST NOT intentionally change anything outside the allowed temporary directories.
 - MAY write files in `/tmp/codex/`.

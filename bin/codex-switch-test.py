@@ -37,8 +37,8 @@ tool = load_tool()
 
 def valid_agents() -> dict[str, dict[str, str]]:
     return {
-        "Orchestrator": {"model": "gpt-5.6-sol", "model_reasoning_effort": "medium"},
         "Solo": {"model": "gpt-5.6-sol", "model_reasoning_effort": "medium"},
+        "Analyst": {"model": "gpt-5.6-sol", "model_reasoning_effort": "high"},
         "Junior": {"model": "gpt-5.6-luna", "model_reasoning_effort": "xhigh"},
         "Explorer": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
         "Librarian": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
@@ -122,6 +122,8 @@ class ValidatePresetTest(unittest.TestCase):
         self.assertEqual([agent for agent, _ in validated.agents], list(tool.AGENTS))
         junior = dict(validated.agents)["Junior"]
         self.assertEqual(junior[tool.EFFORT_KEY], "xhigh")
+        analyst = dict(validated.agents)["Analyst"]
+        self.assertEqual(analyst[tool.EFFORT_KEY], "high")
 
     def test_rejects_unknown_preset_settings_and_agents(self) -> None:
         preset = {**valid_preset(), "model_provider": "openai"}
@@ -147,6 +149,15 @@ class ValidatePresetTest(unittest.TestCase):
         self.assertEqual(
             str(raised.exception), "Unknown setting for Junior: sandbox_mode"
         )
+
+    def test_rejects_orchestrator_as_a_subagent(self) -> None:
+        preset = {
+            **valid_preset(),
+            "agents": {**valid_agents(), "Orchestrator": valid_agents()["Solo"]},
+        }
+        with self.assertRaises(tool.ConfigError) as raised:
+            tool.validate_preset("p-openai", preset)
+        self.assertEqual(str(raised.exception), "Unknown agent: Orchestrator")
 
     def test_requires_every_agent(self) -> None:
         preset = valid_preset()
