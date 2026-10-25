@@ -14,10 +14,12 @@ module imports those packages.
 """
 
 import importlib.util
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
 from types import ModuleType
+from unittest import mock
 
 TOOL_PATH = Path(__file__).resolve().parent / "codex-switch.py"
 
@@ -231,6 +233,29 @@ class UpdateModelsTest(unittest.TestCase):
                 "prompt": "model = keep me\n",
             },
         )
+
+
+class PrepareAgentWritesTest(unittest.TestCase):
+    def test_generates_agents_from_unchanged_templates(self) -> None:
+        template = 'name = "Junior"\ndescription = "Evidence."\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            config_dir = Path(tmp)
+            templates = config_dir / tool.TEMPLATES_DIR
+            templates.mkdir()
+            for agent in tool.AGENTS:
+                (templates / f"{agent}.toml").write_text(template, encoding="utf-8")
+            preset = tool.validate_preset("p", valid_preset())
+            with mock.patch.object(tool, "CONFIG_DIR", config_dir):
+                writes = tool.prepare_agent_writes(preset)
+            unchanged = (templates / "Junior.toml").read_text(encoding="utf-8")
+
+        junior = {write.path.name: write for write in writes}["Junior.toml"]
+        self.assertEqual(junior.path, config_dir / tool.AGENTS_DIR / "Junior.toml")
+        self.assertEqual(
+            junior.contents,
+            'model = "gpt-5.6-luna"\nmodel_reasoning_effort = "xhigh"\n' + template,
+        )
+        self.assertEqual(unchanged, template)
 
 
 class SerializeRootTest(unittest.TestCase):

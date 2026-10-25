@@ -2,6 +2,7 @@
 .mypy_cache
 .ruff_cache
 __pycache__
+/agents/
 /config.toml
 /.config.toml.*.tmp
 .credentials.json

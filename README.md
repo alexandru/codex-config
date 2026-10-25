@@ -183,19 +183,20 @@ Then install Cellar via Coursier:
 Main agents:
 
 - [Orchestrator](./AGENTS.md) (default agent): designs and implements changes; delegates evidence, research, and execution to Junior.
-- [Solo](./agents/Solo.toml): designs and implements changes; works directly.
+- [Solo](./agent-templates/Solo.toml): designs and implements changes; works directly.
 
 Sub-agents:
 
-- [Junior](./agents/Junior.toml): codebase and external evidence gathering, bounded execution, mechanical work.
+- [Junior](./agent-templates/Junior.toml): codebase and external evidence gathering, bounded execution, mechanical work.
 
 ## Shared skills
 
-- [alexandru/skills](https://github.com/alexandru/skills/tree/v13.1.1)
+- [alexandru/skills](https://github.com/alexandru/skills/tree/v13.2.1)
   - `code-review`: user-invoked adapter for `code-reviewing`.
   - `code-reviewing`: review changed code for bugs, structural problems, performance issues, and unintended behavior.
   - `code-refine`: behavior-preserving refinement using the `code-refinements` lenses.
   - `code-refinements`: refinement lenses of constraints, simplicity, and parametricity.
+  - `external-research`: research external documentation, public repositories, and dependency artifacts with a persistent cache.
 - [mattpocock/skills](https://github.com/mattpocock/skills/tree/v1.3.1)
   - `codebase-design`: deep-module design vocabulary and principles.
   - `diagnosing-bugs`: disciplined diagnosis for hard bugs and regressions.

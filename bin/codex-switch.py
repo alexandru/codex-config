@@ -10,8 +10,8 @@
 """Generate Codex's configuration from a preset.
 
 Merges config.common.json and the selected preset from config.presets.json into
-config.toml, preserving existing local settings, and rewrites the model settings
-of every agents/*.toml file.
+config.toml, preserving existing local settings, and generates every
+agents/*.toml from agent-templates/*.toml with the preset's model settings.
 """
 
 import json
@@ -29,6 +29,8 @@ import tomli_w
 PRESETS_FILE = "config.presets.json"
 COMMON_FILE = "config.common.json"
 ROOT_CONFIG_FILE = "config.toml"
+AGENTS_DIR = "agents"
+TEMPLATES_DIR = "agent-templates"
 
 AGENTS: tuple[str, ...] = ("Solo", "Junior")
 MODEL_KEY = "model"
@@ -97,6 +99,11 @@ def switch(preset_name: str | None) -> None:
     # Every input is validated before any configuration file changes.
     agent_writes = prepare_agent_writes(validated)
     write_root_config(root_snapshot, root_contents)
+    agents_dir = CONFIG_DIR / AGENTS_DIR
+    try:
+        agents_dir.mkdir(exist_ok=True)
+    except OSError as error:
+        raise ConfigError(f"failed to create {agents_dir}: {error}") from None
     for write in agent_writes:
         try:
             write.path.write_text(write.contents, encoding="utf-8")
@@ -282,18 +289,19 @@ class AgentWrite:
 
 
 def prepare_agent_writes(preset: ValidatedPreset) -> list[AgentWrite]:
-    """Every agent file write, computed before any file is changed."""
+    """Every generated agent file, computed before any file is changed."""
     writes: list[AgentWrite] = []
     for agent, settings in preset.agents:
-        path = CONFIG_DIR / "agents" / f"{agent}.toml"
+        template = CONFIG_DIR / TEMPLATES_DIR / f"{agent}.toml"
         try:
-            source = path.read_text(encoding="utf-8")
+            source = template.read_text(encoding="utf-8")
         except OSError as error:
-            raise ConfigError(f"failed to read {path}: {error}") from None
+            raise ConfigError(f"failed to read {template}: {error}") from None
         try:
             contents = update_models(source, settings)
         except ConfigError as error:
-            raise ConfigError(f"failed to update {path}: {error}") from None
+            raise ConfigError(f"failed to generate from {template}: {error}") from None
+        path = CONFIG_DIR / AGENTS_DIR / f"{agent}.toml"
         writes.append(AgentWrite(path=path, contents=contents))
     return writes
 
@@ -418,7 +426,7 @@ def applied_rows(preset: ValidatedPreset) -> list[AppliedRow]:
     ]
     rows += [
         AppliedRow(
-            configuration=f"agents/{agent}.toml",
+            configuration=f"{AGENTS_DIR}/{agent}.toml",
             model=setting(settings, MODEL_KEY),
             effort=setting(settings, EFFORT_KEY),
         )

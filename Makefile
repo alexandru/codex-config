@@ -5,7 +5,7 @@
 
 .NOTPARALLEL:
 
-ALEXANDRU_SKILLS_TAG := v13.1.1
+ALEXANDRU_SKILLS_TAG := v13.2.1
 MATTPOCOCK_SKILLS_TAG := v1.3.1
 NVM_TAG := v0.40.8
 SKILLS_AGENT := codex
@@ -32,10 +32,10 @@ install-pipx:
 	esac
 
 generate-config:
-	@if [ ! -f config.toml ]; then \
-		./bin/codex-switch default; \
+	@if [ -f config.toml ] && [ -d agents ]; then \
+		echo "config.toml and agents/ already exist; leaving them untouched"; \
 	else \
-		echo "config.toml already exists; leaving it untouched"; \
+		./bin/codex-switch default; \
 	fi
 
 install-node:
@@ -74,7 +74,8 @@ install-skills:
 		code-review \
 		code-reviewing \
 		code-refine \
-		code-refinements; \
+		code-refinements \
+		external-research; \
 	npx skills add https://github.com/mattpocock/skills/tree/$(MATTPOCOCK_SKILLS_TAG) $(SKILLS_INSTALL_FLAGS) --skill \
 		codebase-design \
 		diagnosing-bugs \
