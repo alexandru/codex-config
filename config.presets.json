@@ -7,21 +7,9 @@
         "model": "gpt-6.1-sol",
         "model_reasoning_effort": "medium"
       },
-      "Analyst": {
-        "model": "gpt-6.1-sol",
-        "model_reasoning_effort": "high"
-      },
       "Junior": {
         "model": "gpt-6-luna",
         "model_reasoning_effort": "xhigh"
-      },
-      "Explorer": {
-        "model": "gpt-6-luna",
-        "model_reasoning_effort": "high"
-      },
-      "Librarian": {
-        "model": "gpt-6-luna",
-        "model_reasoning_effort": "high"
       }
     }
   },
@@ -33,21 +21,9 @@
         "model": "gpt-6.1-sol",
         "model_reasoning_effort": "medium"
       },
-      "Analyst": {
-        "model": "gpt-6.1-sol",
-        "model_reasoning_effort": "high"
-      },
       "Junior": {
         "model": "gpt-6-luna",
         "model_reasoning_effort": "xhigh"
-      },
-      "Explorer": {
-        "model": "gpt-6-luna",
-        "model_reasoning_effort": "high"
-      },
-      "Librarian": {
-        "model": "gpt-6-luna",
-        "model_reasoning_effort": "high"
       }
     }
   }

@@ -38,10 +38,7 @@ tool = load_tool()
 def valid_agents() -> dict[str, dict[str, str]]:
     return {
         "Solo": {"model": "gpt-5.6-sol", "model_reasoning_effort": "medium"},
-        "Analyst": {"model": "gpt-5.6-sol", "model_reasoning_effort": "high"},
         "Junior": {"model": "gpt-5.6-luna", "model_reasoning_effort": "xhigh"},
-        "Explorer": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
-        "Librarian": {"model": "gpt-5.6-luna", "model_reasoning_effort": "high"},
     }
 
 
@@ -122,8 +119,8 @@ class ValidatePresetTest(unittest.TestCase):
         self.assertEqual([agent for agent, _ in validated.agents], list(tool.AGENTS))
         junior = dict(validated.agents)["Junior"]
         self.assertEqual(junior[tool.EFFORT_KEY], "xhigh")
-        analyst = dict(validated.agents)["Analyst"]
-        self.assertEqual(analyst[tool.EFFORT_KEY], "high")
+        solo = dict(validated.agents)["Solo"]
+        self.assertEqual(solo[tool.EFFORT_KEY], "medium")
 
     def test_rejects_unknown_preset_settings_and_agents(self) -> None:
         preset = {**valid_preset(), "model_provider": "openai"}

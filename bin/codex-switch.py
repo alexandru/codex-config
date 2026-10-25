@@ -30,7 +30,7 @@ PRESETS_FILE = "config.presets.json"
 COMMON_FILE = "config.common.json"
 ROOT_CONFIG_FILE = "config.toml"
 
-AGENTS: tuple[str, ...] = ("Solo", "Analyst", "Junior", "Explorer", "Librarian")
+AGENTS: tuple[str, ...] = ("Solo", "Junior")
 MODEL_KEY = "model"
 EFFORT_KEY = "model_reasoning_effort"
 MODEL_KEYS: tuple[str, ...] = (MODEL_KEY, EFFORT_KEY)

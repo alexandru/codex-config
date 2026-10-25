@@ -182,15 +182,12 @@ Then install Cellar via Coursier:
 
 Main agents:
 
-- [Orchestrator](./AGENTS.md) (default agent): designs and implements changes; delegates evidence, research, and checks.
+- [Orchestrator](./AGENTS.md) (default agent): designs and implements changes; delegates evidence, research, and execution to Junior.
 - [Solo](./agents/Solo.toml): designs and implements changes; works directly.
 
 Sub-agents:
 
-- [Analyst](./agents/Analyst.toml): reads code and evidence, exercises judgment, and advises without making changes.
-- [Junior](./agents/Junior.toml): bounded execution, mechanical work.
-- [Explorer](./agents/Explorer.toml): read-only codebase evidence gathering.
-- [Librarian](./agents/Librarian.toml): read-only external documentation and dependency-source research.
+- [Junior](./agents/Junior.toml): codebase and external evidence gathering, bounded execution, mechanical work.
 
 ## Shared skills
 
