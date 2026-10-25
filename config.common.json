@@ -22,6 +22,11 @@
   "permissions": {
     "main": {
       "extends": ":workspace",
+      "filesystem": {
+        "~/.agents/librarian": "write",
+        "~/.agents/sessions/codex": "write",
+        "~/.agents/skills": "read"
+      },
       "network": {
         "enabled": true,
         "domains": {
