@@ -24,7 +24,7 @@ git clone https://github.com/alexandru/codex-config.git ~/.codex &&
     git clone https://github.com/alexandru/codex-config.git /tmp/codex-config
     echo
     # Sync all the files from clone to your working dir
-    rsync -rcv /tmp/codex-config/ ~/.codex/
+    rsync -rlcv /tmp/codex-config/ ~/.codex/
     # Doing some index cleanup
     cd ~/.codex
     git pull
@@ -191,7 +191,7 @@ Sub-agents:
 
 ## Shared skills
 
-- [alexandru/skills](https://github.com/alexandru/skills/tree/v13.2.1)
+- [alexandru/skills](https://github.com/alexandru/skills/tree/v13.2.2)
   - `code-review`: user-invoked adapter for `code-reviewing`.
   - `code-reviewing`: review changed code for bugs, structural problems, performance issues, and unintended behavior.
   - `code-refine`: behavior-preserving refinement using the `code-refinements` lenses.
