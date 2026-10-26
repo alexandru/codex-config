@@ -7,9 +7,14 @@
 
 ALEXANDRU_SKILLS_TAG := v13.2.2
 MATTPOCOCK_SKILLS_TAG := v1.3.1
-NVM_TAG := v0.40.8
 SKILLS_AGENT := codex
 SKILLS_INSTALL_FLAGS := -g -a $(SKILLS_AGENT) -y
+# Node.js required by the skills CLI's engines field.
+SKILLS_NODE_MINIMUM := 22.20.0
+# pipx 1.4.0 added `pipx run` support for inline script metadata.
+PIPX_MINIMUM := 1.4.0
+# Packages come only from Homebrew on macOS and the distro's apt repositories on Linux.
+APT_GET := $(if $(filter 0,$(shell id -u)),,sudo )apt-get
 COURSIER_LINUX_X86_64_URL := https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz
 COURSIER_LINUX_AARCH64_URL := https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz
 # Coursier installs launchers outside the default PATH of a non-login shell.
@@ -22,14 +27,21 @@ all: install-pipx generate-config install-node install-skills install-cellar
 # codex-switch runs through pipx.
 install-pipx:
 	@set -e; \
-	if command -v pipx >/dev/null 2>&1; then \
+	sufficient() { \
+		printf "%s\n" "$$(pipx --version 2>/dev/null)" | awk -F. -v minimum="$(PIPX_MINIMUM)" \
+			'{ split(minimum, m, "."); for (i = 1; i <= 3; i++) if ($$i + 0 != m[i] + 0) exit !($$i + 0 > m[i] + 0); exit 0 }'; \
+	}; \
+	if sufficient; then \
 		echo "pipx already installed: $$(pipx --version)"; exit 0; \
 	fi; \
 	case "$$(uname -s)" in \
 		Darwin) brew install pipx ;; \
-		Linux) sudo apt-get install -y pipx ;; \
+		Linux) $(APT_GET) update; $(APT_GET) install -y --no-install-recommends pipx ;; \
 		*) echo "Unsupported platform: $$(uname -s)" >&2; exit 1 ;; \
-	esac
+	esac; \
+	if ! sufficient; then \
+		echo "pipx $(PIPX_MINIMUM) or later is required; installed: $$(pipx --version 2>/dev/null || echo none)" >&2; exit 1; \
+	fi
 
 generate-config:
 	@if [ -f config.toml ] && [ -d agents ]; then \
@@ -38,26 +50,24 @@ generate-config:
 		./bin/codex-switch default; \
 	fi
 
+# The skills CLI runs through npx.
 install-node:
 	@set -e; \
-	if command -v node >/dev/null 2>&1 && command -v npx >/dev/null 2>&1; then \
-		version=$$(node --version); \
-		echo "Node already installed: $$version"; exit 0; \
+	node_sufficient='const [have, need] = [process.versions.node, process.argv[1]].map((v) => v.split(".").map(Number)); const i = have.findIndex((part, index) => part !== need[index]); process.exit(i < 0 || have[i] > need[i] ? 0 : 1)'; \
+	sufficient() { \
+		npx --version >/dev/null 2>&1 && node -e "$$node_sufficient" "$(SKILLS_NODE_MINIMUM)" >/dev/null 2>&1; \
+	}; \
+	if sufficient; then \
+		echo "Node already installed: $$(node --version)"; exit 0; \
 	fi; \
 	case "$$(uname -s)" in \
-		Darwin) brew install node ;; \
-		Linux) \
-			if [ ! -s "$$HOME/.nvm/nvm.sh" ]; then \
-				installer=$$(mktemp); \
-				trap 'rm -f "$$installer"' 0; \
-				curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$(NVM_TAG)/install.sh" -o "$$installer"; \
-				bash "$$installer"; \
-			fi; \
-			. "$$HOME/.nvm/nvm.sh"; \
-			nvm install --lts; \
-			nvm alias default 'lts/*' ;; \
+		Darwin) if brew list node >/dev/null 2>&1; then brew upgrade node; else brew install node; fi ;; \
+		Linux) $(APT_GET) update; $(APT_GET) install -y --no-install-recommends nodejs npm ;; \
 		*) echo "Unsupported platform: $$(uname -s)" >&2; exit 1 ;; \
-	esac
+	esac; \
+	if ! sufficient; then \
+		echo "Node.js $(SKILLS_NODE_MINIMUM) or later with npx is required by the skills CLI; installed: $$(node --version 2>/dev/null || echo none)" >&2; exit 1; \
+	fi
 
 check-mattpocock-skills-tag:
 	@latest=$$(git ls-remote --tags --refs --sort=-version:refname https://github.com/mattpocock/skills.git 'v*' 2>/dev/null | sed -n '1s#.*refs/tags/##p'); \
@@ -68,14 +78,12 @@ check-mattpocock-skills-tag:
 	fi
 
 install-skills:
-	set -e; \
-	if [ -s "$$HOME/.nvm/nvm.sh" ]; then . "$$HOME/.nvm/nvm.sh"; fi; \
 	npx skills add https://github.com/alexandru/skills/tree/$(ALEXANDRU_SKILLS_TAG) $(SKILLS_INSTALL_FLAGS) --skill \
 		code-review \
 		code-reviewing \
 		code-refine \
 		code-refinements \
-		external-research; \
+		external-research
 	npx skills add https://github.com/mattpocock/skills/tree/$(MATTPOCOCK_SKILLS_TAG) $(SKILLS_INSTALL_FLAGS) --skill \
 		codebase-design \
 		diagnosing-bugs \
@@ -90,8 +98,8 @@ install-skills:
 		tdd \
 		teach \
 		to-spec \
-		to-tickets; \
-	npx skills add https://github.com/VirtusLab/cellar/ $(SKILLS_INSTALL_FLAGS); \
+		to-tickets
+	npx skills add https://github.com/VirtusLab/cellar/ $(SKILLS_INSTALL_FLAGS)
 	npx skills add https://github.com/JuliusBrussee/caveman $(SKILLS_INSTALL_FLAGS) --skill caveman
 	@echo "Shared skills installed in ~/.agents/skills."
 
@@ -117,6 +125,11 @@ install-coursier:
 				aarch64|arm64) url="$(COURSIER_LINUX_AARCH64_URL)" ;; \
 				*) echo "Unsupported architecture: $$(uname -m)" >&2; exit 1 ;; \
 			esac; \
+			missing=; \
+			for tool in curl gzip; do command -v "$$tool" >/dev/null 2>&1 || missing="$$missing $$tool"; done; \
+			if [ -n "$$missing" ]; then \
+				$(APT_GET) update; $(APT_GET) install -y --no-install-recommends $$missing; \
+			fi; \
 			mkdir -p "$$HOME/.local/bin"; \
 			archive=$$(mktemp); \
 			trap 'rm -f "$$archive"' 0; \

@@ -5,43 +5,21 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 ## Installation
 
 <details>
-<summary>STEP 1 — Clone the repository</summary>
+<summary>STEP 1 — Install</summary>
 
-### Clone the repository
+### Install
 
-**WARN** — This is for a fresh Codex installation (no history):
-```sh
-git clone https://github.com/alexandru/codex-config.git ~/.codex &&
-  git -C ~/.codex config --local status.showUntrackedFiles no
-```
-
-**WARN:** This is Codex's working directory, so you may already have a `~/.codex` that you may need to delete, in which case you could lose all your sessions. An alternative would be...
 ```bash
-(
-  set -e
-  if [[ -d ~/.codex ]]; then
-    # Clones in temporary directory
-    git clone https://github.com/alexandru/codex-config.git /tmp/codex-config
-    echo
-    # Sync all the files from clone to your working dir
-    rsync -rlcv /tmp/codex-config/ ~/.codex/
-    # Doing some index cleanup
-    cd ~/.codex
-    git pull
-    git config --local status.showUntrackedFiles no
-    # Cleanup
-    rm -rf /tmp/codex-config
-  else
-    git clone https://github.com/alexandru/codex-config.git ~/.codex
-    git -C ~/.codex config --local status.showUntrackedFiles no
-  fi
-)
+curl -fsSL https://alexandru.github.io/codex-config/install.sh | bash
 ```
 
 If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
 ```sh
 export CODEX_HOME=/absolute/path/to/codex-config
 ```
+
+The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
+Copilot CLI, and Pi can share them.
 
 ### Windows (PowerShell)
 
@@ -92,20 +70,7 @@ For a nonstandard directory:
 </details>
 
 <details>
-<summary>STEP 2 — Install dependencies</summary>
-
-### Install dependencies
-
-```sh
-cd ~/.codex && make
-```
-
-The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
-Copilot CLI, and Pi can share them.
-</details>
-
-<details>
-<summary>STEP 3 — Choose a configuration preset (optional)</summary>
+<summary>STEP 2 — Choose a configuration preset (optional)</summary>
 
 ### Choose a configuration preset (optional)
 
@@ -115,10 +80,10 @@ The [codex-switch](./bin/codex-switch.py) utility switches the default model and
 (
   set -e
   # List available presets
-  ./bin/codex-switch
+  ~/.codex/bin/codex-switch
 
   # Apply a preset
-  ./bin/codex-switch default
+  ~/.codex/bin/codex-switch default
 )
 ```
 
@@ -135,7 +100,7 @@ project configuration can override the selected defaults.
 </details>
 
 <details>
-<summary>STEP 4 — Install Cellar (optional)</summary>
+<summary>STEP 3 — Install Cellar (optional)</summary>
 
 ### Install Cellar (optional)
 
