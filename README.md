@@ -20,53 +20,6 @@ export CODEX_HOME=/absolute/path/to/codex-config
 
 The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
 Copilot CLI, and Pi can share them.
-
-### Windows (PowerShell)
-
-Requires Git. Default directory: `C:\Users\<username>\.codex`.
-
-For a fresh Codex installation (no history):
-
-```powershell
-& {
-    $ErrorActionPreference = 'Stop'
-    $PSNativeCommandUseErrorActionPreference = $false
-    $codexHome = Join-Path $env:USERPROFILE '.codex'
-    git clone https://github.com/alexandru/codex-config.git $codexHome
-    if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
-    git -C $codexHome config --local status.showUntrackedFiles no
-    if ($LASTEXITCODE -ne 0) { throw 'Git config failed.' }
-}
-```
-
-For an existing installation, close Codex and back up `.codex`. This preserves sessions but overwrites matching files; a failed copy may leave partial updates.
-
-```powershell
-& {
-    $ErrorActionPreference = 'Stop'
-    $PSNativeCommandUseErrorActionPreference = $false
-    $codexHome = Join-Path $env:USERPROFILE '.codex'
-    $cloneDir = Join-Path ([System.IO.Path]::GetTempPath()) ('codex-config-' + [guid]::NewGuid())
-    git clone https://github.com/alexandru/codex-config.git $cloneDir
-    if ($LASTEXITCODE -ne 0) { throw 'Git clone failed.' }
-
-    robocopy $cloneDir $codexHome /E
-    if ($LASTEXITCODE -ge 8) { throw "Copy failed; temporary clone retained at $cloneDir" }
-    git -C $codexHome config --local status.showUntrackedFiles no
-    if ($LASTEXITCODE -ne 0) { throw "Git config failed; temporary clone retained at $cloneDir" }
-    Remove-Item -LiteralPath $cloneDir -Recurse -Force
-}
-```
-
-For a nonstandard directory:
-
-```powershell
-& {
-    $ErrorActionPreference = 'Stop'
-    $env:CODEX_HOME = 'D:\codex-config'
-    [Environment]::SetEnvironmentVariable('CODEX_HOME', $env:CODEX_HOME, 'User')
-}
-```
 </details>
 
 <details>
