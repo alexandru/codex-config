@@ -24,7 +24,7 @@
       "extends": ":workspace",
       "filesystem": {
         "~/.agents/librarian": "write",
-        "~/.agents/sessions/codex": "write",
+        "/tmp/codex": "write",
         "~/.agents/skills": "read"
       },
       "network": {
