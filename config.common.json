@@ -8,6 +8,15 @@
       "enabled": true
     }
   },
+  "tui": {
+    "status_line": [
+      "model-with-reasoning",
+      "current-dir",
+      "thread-name",
+      "context-used",
+      "estimated-thread-cost"
+    ]
+  },
   "features": {
     "multi_agent": true,
     "network_proxy": true,
