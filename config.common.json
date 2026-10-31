@@ -14,7 +14,8 @@
       "current-dir",
       "thread-name",
       "context-used",
-      "estimated-thread-cost"
+      "total-input-tokens",
+      "total-output-tokens"
     ]
   },
   "features": {
