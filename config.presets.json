@@ -8,8 +8,8 @@
         "model_reasoning_effort": "medium"
       },
       "Junior": {
-        "model": "gpt-6.1-terra",
-        "model_reasoning_effort": "low"
+        "model": "gpt-6-luna",
+        "model_reasoning_effort": "xhigh"
       }
     }
   }
