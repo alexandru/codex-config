@@ -14,10 +14,16 @@ module imports those packages.
 """
 
 import importlib.util
+import io
+import json
+import os
+import shutil
+import stat
 import tempfile
 import tomllib
+from contextlib import redirect_stdout
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from types import ModuleType
 from unittest import mock
 
@@ -289,6 +295,146 @@ class ParseArgsTest(unittest.TestCase):
                 with self.assertRaises(tool.ConfigError) as raised:
                     tool.parse_args(argv)
                 self.assertEqual(str(raised.exception), "Usage: codex-switch <preset>")
+
+
+class SwitchIntegrationTest(unittest.TestCase):
+    def test_reapplying_preset_preserves_local_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config_dir = Path(tmp)
+            shutil.copyfile(
+                Path(__file__).resolve().parent.parent / tool.COMMON_FILE,
+                config_dir / tool.COMMON_FILE,
+            )
+            (config_dir / tool.PRESETS_FILE).write_text(
+                json.dumps({"test": valid_preset()}), encoding="utf-8"
+            )
+            templates = config_dir / tool.TEMPLATES_DIR
+            templates.mkdir()
+            source_templates = (
+                Path(__file__).resolve().parent.parent / tool.TEMPLATES_DIR
+            )
+            for agent in tool.AGENTS:
+                shutil.copyfile(
+                    source_templates / f"{agent}.toml",
+                    templates / f"{agent}.toml",
+                )
+            (config_dir / tool.ROOT_CONFIG_FILE).write_text(
+                'project_trust = { "local/project" = "trusted" }\n'
+                'local_note = "keep me"\n',
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(tool, "CONFIG_DIR", config_dir):
+                tool.switch("test")
+                first_result = (config_dir / tool.ROOT_CONFIG_FILE).read_bytes()
+                tool.switch("test")
+
+            root = tomllib.loads((config_dir / tool.ROOT_CONFIG_FILE).read_text())
+            self.assertEqual(root["local_note"], "keep me")
+            self.assertEqual(root["project_trust"], {"local/project": "trusted"})
+            self.assertEqual(
+                (config_dir / tool.ROOT_CONFIG_FILE).read_bytes(), first_result
+            )
+            self.assertTrue((config_dir / tool.AGENTS_DIR / "Junior.toml").is_file())
+
+
+class WindowsCompatibilityTest(unittest.TestCase):
+    def test_skips_fchmod_when_creating_temp_file_on_windows(self) -> None:
+        class WindowsOsProxy:
+            name = "nt"
+            fchmod = mock.Mock()
+
+            def __getattr__(self, name: str) -> object:
+                return getattr(os, name)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_os = WindowsOsProxy()
+            with mock.patch.object(tool, "CONFIG_DIR", Path(tmp)), mock.patch.object(
+                tool, "os", fake_os
+            ):
+                path = tool.create_temp_file("model = 'test'\n", 0o640)
+
+            self.assertEqual(path.read_text(encoding="utf-8"), "model = 'test'\n")
+            fake_os.fchmod.assert_not_called()
+
+    def test_replaces_posix_scratch_permission_with_windows_temp_path(self) -> None:
+        config = {
+            "permissions": {
+                "main": {
+                    "filesystem": {
+                        "/tmp/codex": "write",
+                        "~/.agents/librarian": "write",
+                    }
+                }
+            }
+        }
+        fake_os = mock.Mock()
+        fake_os.name = "nt"
+
+        with (
+            mock.patch.object(tool, "os", fake_os),
+            mock.patch.object(tool, "Path", PureWindowsPath),
+            mock.patch.object(
+                tool.tempfile,
+                "gettempdir",
+                return_value=r"C:\Users\test\AppData\Local\Temp",
+            ),
+        ):
+            tool.adapt_platform_paths(config)
+
+        filesystem = config["permissions"]["main"]["filesystem"]
+        self.assertNotIn("/tmp/codex", filesystem)
+        self.assertEqual(
+            filesystem[
+                "C:/Users/test/AppData/Local/Temp/codex"
+            ],
+            "write",
+        )
+        self.assertEqual(filesystem["~/.agents/librarian"], "write")
+
+    @unittest.skipIf(os.name == "nt", "POSIX file modes are not available on Windows")
+    def test_preserves_existing_config_mode_on_posix(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            destination = directory / tool.ROOT_CONFIG_FILE
+            destination.write_bytes(b"old config\n")
+            destination.chmod(0o640)
+            snapshot = tool.RootSnapshot(
+                contents=destination.read_bytes(), config={"local": True}
+            )
+
+            with mock.patch.object(tool, "CONFIG_DIR", directory):
+                tool.write_root_config(snapshot, "new config\n")
+
+            self.assertEqual(stat.S_IMODE(destination.stat().st_mode), 0o640)
+            self.assertEqual(destination.read_text(encoding="utf-8"), "new config\n")
+
+    def test_cleans_up_temp_file_after_write_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            temporary = directory / ".failed.tmp"
+            with mock.patch.object(tool, "CONFIG_DIR", directory), mock.patch.object(
+                tool, "temp_name", return_value=temporary.name
+            ), mock.patch("os.fsync", side_effect=OSError("disk full")):
+                with self.assertRaisesRegex(tool.ConfigError, "failed to write"):
+                    tool.create_temp_file("contents", None)
+
+            self.assertFalse(temporary.exists())
+
+    def test_prints_ascii_table_for_cp1252_stdout(self) -> None:
+        class Cp1252Output(io.StringIO):
+            @property
+            def encoding(self) -> str:
+                return "cp1252"
+
+        output = Cp1252Output()
+        with redirect_stdout(output):
+            tool.print_applied_table(
+                [tool.AppliedRow("config.toml", "gpt-test", "low")]
+            )
+
+        self.assertIn(" | ", output.getvalue())
+        self.assertNotIn("│", output.getvalue())
 
 
 if __name__ == "__main__":

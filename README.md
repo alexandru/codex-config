@@ -13,10 +13,18 @@ Part of [alexandru/agents-config](https://github.com/alexandru/agents-config).
 curl -fsSL https://alexandru.github.io/codex-config/install.sh | bash
 ```
 
-If the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
+On Windows, run in PowerShell:
+
+```powershell
+irm https://alexandru.github.io/codex-config/install.ps1 | iex
+```
+
+On Linux and macOS, if the path is not standard, set `CODEX_HOME` in `~/.zshrc`, `~/.bashrc`, or `~/.profile`:
 ```sh
 export CODEX_HOME=/absolute/path/to/codex-config
 ```
+
+On Windows, set `$env:CODEX_HOME` before installation for a custom location; the installer saves it for future sessions.
 
 The skills are installed under `~/.agents/skills`, where Codex, OpenCode,
 Copilot CLI, and Pi can share them.
@@ -38,6 +46,13 @@ The [codex-switch](./bin/codex-switch.py) utility switches the default model and
   # Apply a preset
   ~/.codex/bin/codex-switch default
 )
+```
+
+On Windows, use the installed commands:
+
+```powershell
+codex-switch
+codex-switch default
 ```
 
 The switcher generates your local `config.toml` from:
@@ -98,3 +113,5 @@ make update-skills
 ```
 
 This reinstalls the configured global skill roster from its upstream sources.
+
+On Windows, `codex-update-config` updates the configuration checkout and reinstalls the skills.

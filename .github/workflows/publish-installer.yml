@@ -1,10 +1,11 @@
-# Publishes bin/utils/install.sh at <GitHub Pages URL>/install.sh.
+# Publishes the Bash and PowerShell installers at the GitHub Pages URL.
 name: Publish installer
 
 on:
   push:
     paths:
       - bin/utils/install.sh
+      - bin/utils/install.ps1
       - .github/workflows/publish-installer.yml
   workflow_dispatch:
 
@@ -31,6 +32,7 @@ jobs:
         run: |
           mkdir site
           cp bin/utils/install.sh site/install.sh
+          cp bin/utils/install.ps1 site/install.ps1
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

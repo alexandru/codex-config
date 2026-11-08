@@ -17,6 +17,7 @@ agents/*.toml from agent-templates/*.toml with the preset's model settings.
 import json
 import os
 import sys
+import tempfile
 import time
 import tomllib
 from collections.abc import Iterable
@@ -93,6 +94,7 @@ def switch(preset_name: str | None) -> None:
     expected_root = merge_objects(
         merge_objects(root_snapshot.config, common), validated.root_models
     )
+    adapt_platform_paths(expected_root)
     reject_nulls(expected_root, ROOT_CONFIG_FILE)
     root_contents = serialize_root(expected_root)
 
@@ -215,6 +217,23 @@ def merge_objects(base: JsonObject, overlay: JsonObject) -> JsonObject:
         **base,
         **{key: merge_values(base.get(key), value) for key, value in overlay.items()},
     }
+
+
+def adapt_platform_paths(config: JsonObject) -> None:
+    """Use the native temporary directory for the shared scratch permission."""
+    if os.name != "nt":
+        return
+    permissions = config.get("permissions")
+    if not isinstance(permissions, dict):
+        return
+    main_permission = permissions.get("main")
+    if not isinstance(main_permission, dict):
+        return
+    filesystem = main_permission.get("filesystem")
+    if isinstance(filesystem, dict) and "/tmp/codex" in filesystem:
+        filesystem[(Path(tempfile.gettempdir()) / "codex").as_posix()] = filesystem.pop(
+            "/tmp/codex"
+        )
 
 
 def reject_nulls(value: Json, path: str) -> None:
@@ -373,11 +392,16 @@ def create_temp_file(contents: str, mode: int | None) -> Path:
             continue
         except OSError as error:
             raise ConfigError(f"failed to create {path}: {error}") from None
-        with os.fdopen(fd, "w", encoding="utf-8") as file:
-            file.write(contents)
-            if mode is not None:
-                os.fchmod(file.fileno(), mode)
-            os.fsync(file.fileno())
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as file:
+                file.write(contents)
+                if mode is not None and os.name != "nt":
+                    os.fchmod(file.fileno(), mode)
+                file.flush()
+                os.fsync(file.fileno())
+        except OSError as error:
+            path.unlink(missing_ok=True)
+            raise ConfigError(f"failed to write {path}: {error}") from None
         return path
     raise ConfigError(f"failed to create a temporary config.toml file in {CONFIG_DIR}")
 
@@ -445,6 +469,11 @@ def column_width(header: str, values: Iterable[str]) -> int:
 
 
 def print_applied_table(rows: list[AppliedRow]) -> None:
+    vertical, horizontal, crossing = "│", "─", "┼"
+    try:
+        (vertical + horizontal + crossing).encode(sys.stdout.encoding or "utf-8")
+    except UnicodeEncodeError:
+        vertical, horizontal, crossing = "|", "-", "+"
     configuration_width = column_width(
         "configuration", (row.configuration for row in rows)
     )
@@ -452,14 +481,15 @@ def print_applied_table(rows: list[AppliedRow]) -> None:
 
     print()
     print(
-        f"  {'configuration':<{configuration_width}} │ {'model':<{model_width}} │ effort"
+        f"  {'configuration':<{configuration_width}} {vertical} {'model':<{model_width}} {vertical} effort"
     )
     print(
-        f"  {'─' * configuration_width}─┼─{'─' * model_width}─┼─{'─' * len('effort')}"
+        f"  {horizontal * configuration_width}{horizontal}{crossing}{horizontal}"
+        f"{horizontal * model_width}{horizontal}{crossing}{horizontal}{horizontal * len('effort')}"
     )
     for row in rows:
         print(
-            f"  {row.configuration:<{configuration_width}} │ {row.model:<{model_width}} │ {row.effort}"
+            f"  {row.configuration:<{configuration_width}} {vertical} {row.model:<{model_width}} {vertical} {row.effort}"
         )
     print()
 

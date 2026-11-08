@@ -1,0 +1,61 @@
+name: Test configuration
+
+on:
+  push:
+    paths:
+      - bin/codex-switch.py
+      - bin/*.cmd
+      - bin/utils/deploy.py
+      - bin/utils/install.ps1
+      - bin/utils/setup-path.py
+      - tests/**
+      - .github/workflows/test.yml
+  pull_request:
+    paths:
+      - bin/codex-switch.py
+      - bin/*.cmd
+      - bin/utils/deploy.py
+      - bin/utils/install.ps1
+      - bin/utils/setup-path.py
+      - tests/**
+      - .github/workflows/test.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install validation dependencies
+        run: python -m pip install tomli-w==1.2.0 mypy
+      - name: Run Python tests
+        run: |
+          python tests/codex-switch-test.py
+          python tests/deploy-test.py
+      - name: Check strict types
+        run: mypy --strict bin/codex-switch.py bin/utils/deploy.py bin/utils/setup-path.py
+      - name: Check Windows strict types
+        if: matrix.os == 'windows-latest'
+        run: mypy --strict --platform win32 bin/codex-switch.py bin/utils/deploy.py bin/utils/setup-path.py
+
+  powershell:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [pwsh, powershell]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run offline PowerShell checks
+        shell: ${{ matrix.shell }}
+        run: ./tests/install-test.ps1

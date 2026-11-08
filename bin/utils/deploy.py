@@ -2,10 +2,10 @@
 
 """Deploy a harness configuration checkout into its configuration directory.
 
-Called by install.sh once Git, Python, and Make are available. The source is
-either a fresh download or a local checkout; its Git index decides which files
-are eligible, and their working-tree contents, symlinks, and executable modes
-are what gets deployed.
+Called by install.sh or install.ps1 once Git and Python are available. The
+source is either a fresh download or a local checkout; its Git index decides
+which files are eligible, and their working-tree contents, symlinks, and
+executable modes are what gets deployed.
 
 The destination is handled by what it already is:
 
@@ -19,12 +19,14 @@ The destination is handled by what it already is:
 Existing files are never overwritten: a destination path holding different
 content, or reached through a symlink, fails the whole deployment before any
 change. Copies are atomic per file and identical files are skipped, so an
-interrupted deployment can be rerun. Finally `make` runs in the destination.
+interrupted deployment can be rerun. Finally `make` runs in the destination
+unless `--skip-setup` is set.
 """
 
 from __future__ import annotations
 
 import argparse
+import ntpath
 import os
 import re
 import shutil
@@ -40,6 +42,7 @@ from typing import Literal
 SourceKind = Literal["download", "checkout"]
 MAX_LISTED_CONFLICTS = 20
 SCP_LIKE_URL = re.compile(r"^(?:[^@/]+@)?([^:/]+):(?!//)(.*)$")
+WINDOWS_DRIVE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
 URL_WITH_SCHEME = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://(?:[^@/]*@)?([^/:]+)(?::\d+)?(/.*)?$")
 
 
@@ -87,11 +90,17 @@ def run_git(directory: Path, *arguments: str) -> str:
 def repository_identity(url: str) -> str:
     """Compare clone URLs by host and path, ignoring scheme, user, and `.git`."""
     text = url.strip()
-    scheme = URL_WITH_SCHEME.match(text)
-    if scheme is not None and not text.lower().startswith("file://"):
-        identity = f"{scheme.group(1).lower()}/{(scheme.group(2) or '').lstrip('/')}"
+    if WINDOWS_DRIVE_PATH.match(text):
+        identity = ntpath.normcase(ntpath.normpath(text))
     elif text.lower().startswith("file://"):
-        identity = os.path.realpath(text[len("file://") :])
+        file_path = text[len("file://") :]
+        windows_file_path = file_path.lstrip("/")
+        if WINDOWS_DRIVE_PATH.match(windows_file_path):
+            identity = ntpath.normcase(ntpath.normpath(windows_file_path))
+        else:
+            identity = os.path.realpath(file_path)
+    elif (scheme := URL_WITH_SCHEME.match(text)) is not None:
+        identity = f"{scheme.group(1).lower()}/{(scheme.group(2) or '').lstrip('/')}"
     elif os.path.isabs(text) or text.startswith("."):
         identity = os.path.realpath(text)
     else:
@@ -99,8 +108,8 @@ def repository_identity(url: str) -> str:
         identity = (
             f"{scp.group(1).lower()}/{scp.group(2).lstrip('/')}" if scp else text
         )
-    identity = identity.rstrip("/")
-    return identity[: -len(".git")] if identity.endswith(".git") else identity
+    identity = identity.rstrip("/\\")
+    return identity[:-4] if identity.lower().endswith(".git") else identity
 
 
 def checkout_root(directory: Path) -> Path:
@@ -139,12 +148,18 @@ def read_entry(path: Path) -> Entry | None:
     raise DeployError(f"{path} is neither a regular file nor a symbolic link")
 
 
-def deployables(source: Path) -> list[Deployable]:
+def deployables(source: Path, *, windows: bool | None = None) -> list[Deployable]:
     """Indexed files as they exist in the working tree; deleted ones are skipped."""
+    if windows is None:
+        windows = os.name == "nt"
     found: list[Deployable] = []
     for path in eligible_paths(source):
         entry = read_entry(source.joinpath(*path.parts))
         if entry is not None:
+            if windows and isinstance(entry, Symlink):
+                entry = RegularFile(
+                    entry.target.encode("utf-8", errors="surrogateescape"), False
+                )
             found.append(Deployable(path, entry))
     return found
 
@@ -172,8 +187,10 @@ def conflict(destination: Path, item: Deployable) -> str | None:
     return f"{target} has a different file type"
 
 
-def write_entry(target: Path, entry: Entry) -> None:
+def write_entry(target: Path, entry: Entry, *, windows: bool | None = None) -> None:
     """Replace the target atomically, so an interruption leaves no partial file."""
+    if windows is None:
+        windows = os.name == "nt"
     existing = read_entry(target)
     if existing == entry:
         return
@@ -182,8 +199,9 @@ def write_entry(target: Path, entry: Entry) -> None:
         and isinstance(entry, RegularFile)
         and existing.content == entry.content
     ):
-        mode = stat.S_IMODE(target.lstat().st_mode)
-        target.chmod(mode | 0o111 if entry.executable else mode & ~0o111)
+        if not windows:
+            mode = stat.S_IMODE(target.lstat().st_mode)
+            target.chmod(mode | 0o111 if entry.executable else mode & ~0o111)
         return
 
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -195,7 +213,8 @@ def write_entry(target: Path, entry: Entry) -> None:
         if isinstance(entry, RegularFile):
             with os.fdopen(descriptor, "wb") as handle:
                 handle.write(entry.content)
-            temporary.chmod(0o755 if entry.executable else 0o644)
+            if not windows:
+                temporary.chmod(0o755 if entry.executable else 0o644)
         else:
             os.close(descriptor)
             temporary.unlink()
@@ -206,8 +225,12 @@ def write_entry(target: Path, entry: Entry) -> None:
         raise
 
 
-def copy_files(source: Path, destination: Path) -> None:
-    items = deployables(source)
+def copy_files(
+    source: Path, destination: Path, *, windows: bool | None = None
+) -> None:
+    if windows is None:
+        windows = os.name == "nt"
+    items = deployables(source, windows=windows)
     conflicts = [reason for item in items if (reason := conflict(destination, item))]
     if conflicts:
         listed = "; ".join(conflicts[:MAX_LISTED_CONFLICTS])
@@ -218,15 +241,25 @@ def copy_files(source: Path, destination: Path) -> None:
         )
     try:
         for item in items:
-            write_entry(destination.joinpath(*item.path.parts), item.entry)
+            write_entry(
+                destination.joinpath(*item.path.parts), item.entry, windows=windows
+            )
     except OSError as error:
         raise DeployError(
             f"cannot write into {destination}: {error.strerror or error}"
         ) from None
 
 
-def install_metadata(source: Path, repository: str, destination: Path) -> None:
+def install_metadata(
+    source: Path,
+    repository: str,
+    destination: Path,
+    *,
+    windows: bool | None = None,
+) -> None:
     """Give the destination its own clone metadata, moved in as the final step."""
+    if windows is None:
+        windows = os.name == "nt"
     try:
         staging = Path(tempfile.mkdtemp(prefix=".git-install.", dir=destination))
     except OSError as error:
@@ -236,6 +269,8 @@ def install_metadata(source: Path, repository: str, destination: Path) -> None:
     try:
         clone = staging / "clone"
         run_git(staging, "clone", "--quiet", "--no-checkout", "--no-hardlinks", str(source), str(clone))
+        if windows:
+            run_git(clone, "config", "--local", "core.symlinks", "false")
         run_git(clone, "remote", "set-url", "origin", repository)
         run_git(clone, "config", "--local", "status.showUntrackedFiles", "no")
         run_git(clone, "read-tree", "HEAD")
@@ -274,7 +309,12 @@ def prepare_destination(destination: Path) -> None:
 
 
 def deploy(
-    source: Path, source_kind: SourceKind, repository: str, destination: Path
+    source: Path,
+    source_kind: SourceKind,
+    repository: str,
+    destination: Path,
+    *,
+    windows: bool | None = None,
 ) -> None:
     if checkout_root(source) != Path(os.path.realpath(source)):
         raise DeployError(f"{source} is not the root of a Git checkout")
@@ -286,8 +326,8 @@ def deploy(
     metadata = destination / ".git"
     if not (metadata.exists() or metadata.is_symlink()):
         print(f"Deploying into {destination}")
-        copy_files(source, destination)
-        install_metadata(source, repository, destination)
+        copy_files(source, destination, windows=windows)
+        install_metadata(source, repository, destination, windows=windows)
         return
 
     if checkout_root(destination) != Path(os.path.realpath(destination)):
@@ -300,7 +340,7 @@ def deploy(
         )
     if source_kind == "checkout":
         print(f"Deploying into the checkout in {destination}")
-        copy_files(source, destination)
+        copy_files(source, destination, windows=windows)
         return
     print(f"Updating the checkout in {destination}")
     update_checkout(destination)
@@ -322,6 +362,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--repository", required=True)
     parser.add_argument("--destination", required=True, type=Path)
     parser.add_argument("--directory-variable", required=True)
+    parser.add_argument(
+        "--skip-setup",
+        action="store_true",
+        help="deploy files without running Make in the destination",
+    )
     return parser.parse_args(argv)
 
 
@@ -333,7 +378,8 @@ def main(argv: Sequence[str]) -> int:
     source_kind: SourceKind = "download" if arguments.source_kind == "download" else "checkout"
     try:
         deploy(source, source_kind, arguments.repository, destination)
-        run_make(destination)
+        if not arguments.skip_setup:
+            run_make(destination)
     except DeployError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
@@ -341,9 +387,10 @@ def main(argv: Sequence[str]) -> int:
         print("Error: interrupted; rerun the installer to finish", file=sys.stderr)
         return 130
 
-    print(f"Installed into {destination}")
+    verb = "Deployed" if arguments.skip_setup else "Installed"
+    print(f"{verb} into {destination}")
     variable = arguments.directory_variable
-    if variable in os.environ:
+    if not arguments.skip_setup and variable in os.environ:
         print(f"{variable} is set; export it from your shell startup files too.")
     return 0
 

@@ -8,7 +8,7 @@ What follows is your contract, using keywords from RFC 2119 (MUST, MUST NOT, SHO
 - MUST NOT stage, unstage, commit, push, create tags, or otherwise modify Git state without explicit user instructions.
 - MUST follow applicable `AGENTS.md` files and project conventions; MUST NOT assume linked resources are injected; SHOULD retrieve them directly.
 - MUST NOT delegate to **Solo**.
-- SHOULD use `/tmp/codex/<session-id>/` for temporary files.
+- SHOULD use `<system-temp>/codex/<session-id>/` for temporary files, where `<system-temp>` is the platform's temporary directory.
 
 ## Delegation
 
