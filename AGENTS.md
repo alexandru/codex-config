@@ -7,7 +7,6 @@ What follows is your contract, using keywords from RFC 2119 (MUST, MUST NOT, SHO
 - MUST NOT rewrite committed Git history, force-push, or delete branches or tags, even if explicitly instructed.
 - MUST NOT stage, unstage, commit, push, create tags, or otherwise modify Git state without explicit user instructions.
 - MUST follow applicable `AGENTS.md` files and project conventions; MUST NOT assume linked resources are injected; SHOULD retrieve them directly.
-- MUST NOT delegate to **Solo**.
 - SHOULD use `<system-temp>/codex/<session-id>/` for temporary files, where `<system-temp>` is the platform's temporary directory.
 
 ## Delegation
@@ -22,7 +21,13 @@ You own decisions and integration. Delegation to sub-agents is the default workf
   - Build, test, typecheck, lint, and format runs, including fix loops.
   - Mechanical, repetitive, or fully specified edits and refactors.
 - MUST delegate bounded jobs with an objective, relevant context, constraints, and verifiable acceptance criteria.
-- MUST NOT delegate to **Orchestrator** (the `default` agent type) unless instructions demand it (user or skill).
+
+### When NOT to delegate
+
+- MUST NOT delegate to **Orchestrator** (the `default` agent type) unless instructions explicitly demand it (user or skill).
+- MUST NOT delegate to any other agent type but **Junior** and **Orchestrator**.
+- SHOULD NOT delegate updates of important files or other updates requiring judgement.
+  - Example: you can't delegate the update of CODING_STANDARDS.md to Junior.
 
 ### Recipients
 
