@@ -12,5 +12,29 @@
         "model_reasoning_effort": "medium"
       }
     }
+  },
+  "work": {
+    "model": "gpt-6.1-sol",
+    "model_reasoning_effort": "medium",
+    "agents": {
+      "Solo": {
+        "model": "gpt-6.1-sol",
+        "model_reasoning_effort": "medium"
+      },
+      "Junior": {
+        "model": "gpt-6.1-terra",
+        "model_reasoning_effort": "medium"
+      }
+    },
+    "mcp_servers": {
+      "mcp-shell": {
+        "url": "https://host.docker.internal:8443/mcp",
+        "bearer_token_env_var": "MCP_SHELL_TOKEN",
+        "tool_timeout_sec": 300
+      }
+    },
+    "features": {
+      "mcp_2026_07_28": true
+    }
   }
 }

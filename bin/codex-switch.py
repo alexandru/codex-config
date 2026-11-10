@@ -37,6 +37,7 @@ AGENTS: tuple[str, ...] = ("Solo", "Junior")
 MODEL_KEY = "model"
 EFFORT_KEY = "model_reasoning_effort"
 MODEL_KEYS: tuple[str, ...] = (MODEL_KEY, EFFORT_KEY)
+PRESET_TABLE_KEYS: tuple[str, ...] = ("mcp_servers", "features")
 EFFORTS: tuple[str, ...] = ("none", "minimal", "low", "medium", "high", "xhigh")
 TEMP_ATTEMPTS = 16
 
@@ -91,9 +92,8 @@ def switch(preset_name: str | None) -> None:
     root_snapshot = read_root_snapshot()
     validated = validate_preset(preset_name, preset)
 
-    expected_root = merge_objects(
-        merge_objects(root_snapshot.config, common), validated.root_models
-    )
+    local = without_preset_settings(root_snapshot.config, presets)
+    expected_root = merge_objects(merge_objects(local, common), validated.root_config)
     adapt_platform_paths(expected_root)
     reject_nulls(expected_root, ROOT_CONFIG_FILE)
     root_contents = serialize_root(expected_root)
@@ -167,20 +167,21 @@ def model_settings(settings: JsonObject) -> JsonObject:
 
 @dataclass(frozen=True)
 class ValidatedPreset:
-    """A preset ready to apply: root model keys and every agent's settings."""
+    """A preset ready to apply: root settings and every agent's settings."""
 
-    root_models: JsonObject
+    root_config: JsonObject
     agents: list[tuple[str, JsonObject]]
 
 
 def validate_preset(name: str, preset: Json) -> ValidatedPreset:
-    """A known-shape preset: only model keys at the root, and valid settings for
-    every agent in the roster.
-    """
+    """A preset with valid root settings and model settings for every agent."""
     root = validated_settings(preset, name)
     for key in root:
-        if key != "agents" and key not in MODEL_KEYS:
+        if key != "agents" and key not in MODEL_KEYS and key not in PRESET_TABLE_KEYS:
             raise ConfigError(f"Unknown preset setting: {key}")
+    for key in PRESET_TABLE_KEYS:
+        if key in root and not isinstance(root[key], dict):
+            raise ConfigError(f"{name}.{key} must contain an object")
 
     agents = root.get("agents")
     if not isinstance(agents, dict):
@@ -202,7 +203,32 @@ def validate_preset(name: str, preset: Json) -> ValidatedPreset:
                 raise ConfigError(f"Unknown setting for {agent}: {key}")
         agent_settings.append((agent, model_settings(settings)))
 
-    return ValidatedPreset(root_models=model_settings(root), agents=agent_settings)
+    root_config = {key: value for key, value in root.items() if key != "agents"}
+    reject_nulls(root_config, name)
+    return ValidatedPreset(root_config=root_config, agents=agent_settings)
+
+
+def without_preset_settings(config: JsonObject, presets: JsonObject) -> JsonObject:
+    """Remove preset-owned servers and feature flags. Keep other local settings."""
+    result = dict(config)
+    for key in PRESET_TABLE_KEYS:
+        table = result.get(key)
+        if not isinstance(table, dict):
+            continue
+        owned: set[str] = set()
+        for preset in presets.values():
+            if isinstance(preset, dict):
+                settings = preset.get(key)
+                if isinstance(settings, dict):
+                    owned.update(settings)
+        if not owned:
+            continue
+        remaining = {name: value for name, value in table.items() if name not in owned}
+        if remaining:
+            result[key] = remaining
+        else:
+            result.pop(key)
+    return result
 
 
 def merge_values(base: Json, overlay: Json) -> Json:
@@ -444,8 +470,8 @@ def applied_rows(preset: ValidatedPreset) -> list[AppliedRow]:
     rows = [
         AppliedRow(
             configuration=ROOT_CONFIG_FILE,
-            model=setting(preset.root_models, MODEL_KEY),
-            effort=setting(preset.root_models, EFFORT_KEY),
+            model=setting(preset.root_config, MODEL_KEY),
+            effort=setting(preset.root_config, EFFORT_KEY),
         )
     ]
     rows += [

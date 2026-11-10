@@ -123,7 +123,7 @@ class ValidatePresetTest(unittest.TestCase):
     def test_extracts_root_and_agent_settings(self) -> None:
         validated = tool.validate_preset("p-openai", valid_preset())
 
-        self.assertEqual(validated.root_models[tool.MODEL_KEY], "gpt-5.6-sol")
+        self.assertEqual(validated.root_config[tool.MODEL_KEY], "gpt-5.6-sol")
         self.assertEqual([agent for agent, _ in validated.agents], list(tool.AGENTS))
         junior = dict(validated.agents)["Junior"]
         self.assertEqual(junior[tool.EFFORT_KEY], "xhigh")
@@ -154,6 +154,14 @@ class ValidatePresetTest(unittest.TestCase):
         self.assertEqual(
             str(raised.exception), "Unknown setting for Junior: sandbox_mode"
         )
+
+    def test_rejects_non_object_preset_tables(self) -> None:
+        for key in ("features", "mcp_servers"):
+            for value in (None, False, [], "invalid"):
+                with self.subTest(key=key, value=value):
+                    preset = {**valid_preset(), key: value}
+                    with self.assertRaises(tool.ConfigError):
+                        tool.validate_preset("p-openai", preset)
 
     def test_rejects_orchestrator_as_a_subagent(self) -> None:
         preset = {
@@ -298,6 +306,77 @@ class ParseArgsTest(unittest.TestCase):
 
 
 class SwitchIntegrationTest(unittest.TestCase):
+    def test_work_preset_switches_without_losing_local_settings(self) -> None:
+        source_dir = Path(__file__).resolve().parent.parent
+        presets = json.loads((source_dir / tool.PRESETS_FILE).read_text())
+        for key in ("model", "model_reasoning_effort", "agents"):
+            self.assertEqual(presets["work"][key], presets["default"][key])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config_dir = Path(tmp)
+            for name in (tool.COMMON_FILE, tool.PRESETS_FILE):
+                shutil.copyfile(source_dir / name, config_dir / name)
+            shutil.copytree(
+                source_dir / tool.TEMPLATES_DIR, config_dir / tool.TEMPLATES_DIR
+            )
+            config_path = config_dir / tool.ROOT_CONFIG_FILE
+            config_path.write_text(
+                '[features]\nlocal_feature = true\n'
+                '[mcp_servers.local]\nurl = "https://example.invalid/mcp"\n',
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(tool, "CONFIG_DIR", config_dir):
+                tool.switch("default")
+                default = tomllib.loads(config_path.read_text())
+                tool.switch("work")
+                work_bytes = config_path.read_bytes()
+                work = tomllib.loads(work_bytes.decode("utf-8"))
+                tool.switch("work")
+                self.assertEqual(config_path.read_bytes(), work_bytes)
+                tool.switch("default")
+                restored = tomllib.loads(config_path.read_text())
+
+            self.assertEqual(
+                work["mcp_servers"]["mcp-shell"],
+                {
+                    "url": "https://host.docker.internal:8443/mcp",
+                    "bearer_token_env_var": "MCP_SHELL_TOKEN",
+                    "tool_timeout_sec": 300,
+                },
+            )
+            self.assertTrue(work["features"]["mcp_2026_07_28"])
+            self.assertNotIn("mcp-shell", restored["mcp_servers"])
+            self.assertNotIn("mcp_2026_07_28", restored["features"])
+            for root in (default, work, restored):
+                self.assertTrue(root["features"]["local_feature"])
+                self.assertTrue(root["features"]["multi_agent"])
+                self.assertEqual(
+                    root["mcp_servers"]["local"]["url"],
+                    "https://example.invalid/mcp",
+                )
+
+    def test_null_in_preset_does_not_write_configuration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config_dir = Path(tmp)
+            (config_dir / tool.COMMON_FILE).write_text("{}", encoding="utf-8")
+            (config_dir / tool.PRESETS_FILE).write_text(
+                json.dumps(
+                    {"test": {**valid_preset(), "features": {"invalid": None}}}
+                ),
+                encoding="utf-8",
+            )
+            config_path = config_dir / tool.ROOT_CONFIG_FILE
+            config_path.write_text('local_note = "keep me"\n', encoding="utf-8")
+            initial = config_path.read_bytes()
+
+            with mock.patch.object(tool, "CONFIG_DIR", config_dir):
+                with self.assertRaises(tool.ConfigError):
+                    tool.switch("test")
+
+            self.assertEqual(config_path.read_bytes(), initial)
+            self.assertFalse((config_dir / tool.AGENTS_DIR).exists())
+
     def test_reapplying_preset_preserves_local_settings(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config_dir = Path(tmp)
