@@ -348,8 +348,8 @@ function Install-SharedSkills {
         -FailureMessage 'Could not install the mattpocock shared skills.'
 
     Invoke-NativeCommand -Executable $script:NpxExecutable -Arguments @(
-        '--yes', 'skills', 'add', 'https://github.com/JuliusBrussee/caveman', '-g', '-a', 'codex', '-y', '--skill', 'caveman'
-    ) -FailureMessage 'Could not install the caveman skill.'
+        '--yes', 'skills', 'add', 'https://github.com/humanlayer/skills', '-g', '-a', 'codex', '-y', '--skill', 'show-me'
+    ) -FailureMessage 'Could not install the show-me skill.'
 }
 
 function Find-LocalSource {
